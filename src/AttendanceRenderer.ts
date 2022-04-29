@@ -1,60 +1,77 @@
-import { App, MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
+import { App, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownRenderer, TFile } from "obsidian";
 import AttendancePlugin from "./main";
-import {Attendance, AttendanceParser} from "./AttendanceData";
+import {Attendance, AttendanceEntry, parseAttendanceSource} from "./AttendanceData";
+import { EVENT_CACHE_UPDATE, SourceCache } from "./SourceCache";
+
+
+
+
+
 
 export class AttendanceRenderer {
 	private readonly app: App;
+	private readonly cache: SourceCache;
 
 	constructor({
 		plugin,
+		cache,
 	}: {
 		plugin: AttendancePlugin;
+		cache: SourceCache
 	}) {
 		this.app = plugin.app;
+		this.cache = cache;
 
-		plugin.registerMarkdownCodeBlockProcessor(
+		const processor = plugin.registerMarkdownCodeBlockProcessor(
 			"attendance",
-			this._addQueryRenderChild.bind(this)
+			this.addQueryRenderChild.bind(this)
 		);
 	}
 
-	public addQueryRenderChild = this._addQueryRenderChild.bind(this);
-
-	private async _addQueryRenderChild(
+	private async addQueryRenderChild(
 		source: string,
 		element: HTMLElement,
 		context: MarkdownPostProcessorContext
 	) {
-		context.addChild(
-			new AttendanceRenderChild({
-				app: this.app,
-				container: element,
-				source,
-			})
-		);
+
+		const attendance = parseAttendanceSource(source, this.cache);
+		const renderChild = new AttendanceRenderChild({
+			context,
+			container: element,
+			attendance,
+			app: this.app
+		});
+	
+		context.addChild(renderChild);
 	}
 }
 
 
 class AttendanceRenderChild extends MarkdownRenderChild {
-	private readonly source: string;
+	private readonly context: MarkdownPostProcessorContext;
 
-	constructor(args: {app: App, container: HTMLElement, source: string}) {
+	constructor(args: {context: MarkdownPostProcessorContext, container: HTMLElement, attendance: Attendance, app: App}) {
 		super(args.container);
-	
-		this.source = args.source;
+		this.context = args.context;
+		this.render(args.attendance);
 		
-		console.log(this.source);
-		const parser = new AttendanceParser();
-		parser.parse(this.source);
-
-		console.log(parser.attendance);
-
-		this.render(parser.attendance);
+		this.registerEvent(args.app.workspace.on(EVENT_CACHE_UPDATE, () => this.render(args.attendance)));
 	}
 
-	private async render(a: Attendance) {
-		const content = this.containerEl.createDiv();
-		content.innerHTML = `<pre>${JSON.stringify(a, null, 2)}</pre>`;
+
+	private render(a: Attendance) {
+		this.containerEl.innerHTML = "";
+		const content = this.containerEl.firstChild || this.containerEl.createDiv();
+		const ul = content.createEl("ul");
+		a.getAttendances().forEach((a) => this.renderListItem(a, ul));
 	}
+
+	private renderListItem(a: AttendanceEntry, ul: HTMLElement) {
+		const li = ul.createEl("li");
+
+		console.log("Render item", a);
+		
+
+		MarkdownRenderer.renderMarkdown("[["+ a.link + "]], ", li, this.context.sourcePath, this);
+	} 
 }

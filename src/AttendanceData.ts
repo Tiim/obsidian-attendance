@@ -1,52 +1,58 @@
+import { SourceCache } from "./SourceCache";
+
 export class Attendance {
 	public readonly date: string;
 	public readonly title: string;
-	public readonly source: string;
+	public readonly source: AttendanceSource;
 	public readonly attendances: AttendanceEntry[] = [];
+	private readonly cache: SourceCache;
 
-  constructor(date: string, title: string, source: string, attendances: AttendanceEntry[]) {
+  constructor(date: string, title: string, source: AttendanceSource, attendances: AttendanceEntry[], cache: SourceCache) {
     this.date = date;
     this.title = title;
     this.source = source;
-    this.attendances = attendances;
-  }
-}
+    this.attendances = attendances.slice();	
+		this.cache = cache;
+	}
 
-export class AttendanceParser {
-	public attendance: Attendance;
-
-	public parse(sourceString: string) {
-		let date;
-		let title;
-		let source;
-		let attendances: AttendanceEntry[] = [];
-
-		sourceString.split("\n").forEach((line) => {
-			line = line.trim();
-			if (line.startsWith("date:")) {
-				date = line.substring(5).trim();
-			} else if (line.startsWith("title:")) {
-				title = line.substring(6).trim();
-			} else if (line.startsWith("source:")) {
-				source = AttendanceSource.parse(line.substring(7).trim());
-			} else if (line.startsWith("*")) {
-				attendances.push(
-					AttendanceEntry.parse(line.substring(1).trim())
-				);
-			}
-		});
-
-		if (!date || !title || !source) {
-			throw new Error(
-				"The elements 'date:' and 'title:' and 'source:' are required."
-			);
-		}
-
-		this.attendance = new Attendance(date, title, source, attendances);
+	public getAttendances(): AttendanceEntry[] {
+		return [...this.attendances, 
+			...Array.from(this.cache.getFiles(this.source))
+			.map((file) => (new AttendanceEntry(file, "", "")))];
 	}
 }
 
-class AttendanceEntry {
+export function parseAttendanceSource(sourceString: string, cache: SourceCache) {
+	let date: string;
+	let title: string;
+	let source: AttendanceSource;
+	let attendances: AttendanceEntry[] = [];
+
+	sourceString.split("\n").forEach((line) => {
+		line = line.trim();
+		if (line.startsWith("date:")) {
+			date = line.substring(5).trim();
+		} else if (line.startsWith("title:")) {
+			title = line.substring(6).trim();
+		} else if (line.startsWith("source:")) {
+			source = AttendanceSource.parse(line.substring(7).trim());
+		} else if (line.startsWith("*")) {
+			attendances.push(
+				AttendanceEntry.parse(line.substring(1).trim())
+			);
+		}
+	});
+
+	if (!date || !title || !source) {
+		throw new Error(
+			"The elements 'date:' and 'title:' and 'source:' are required."
+		);
+	}
+
+	return new Attendance(date, title, source, attendances, cache);
+}
+
+export class AttendanceEntry {
 	public readonly link: string;
 	public readonly state: string;
 	public readonly note: string;
@@ -75,7 +81,7 @@ class AttendanceEntry {
 	}
 }
 
-class AttendanceSource {
+export class AttendanceSource {
 	public readonly type: "tag";
 	public readonly value: string;
 
