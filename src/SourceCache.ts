@@ -17,7 +17,7 @@ export class SourceCache extends Component {
 	/** Map paths to tags */
 	private readonly tags = new IndexMap();
 	private readonly cache: MetadataCache;
-	private readonly trigger: (name: string, ...data: any[]) => void;
+	private readonly trigger: (name: string, reason: string) => void;
 
 	constructor(app: App, plugin: AttendancePlugin) {
 		super();
@@ -88,7 +88,7 @@ export class IndexMap {
 
 	/** Returns all values for the given key. */
 	public get(key: string): Set<string> {
-		let result = this.map.get(key);
+		const result = this.map.get(key);
 		if (result) {
 			return new Set(result);
 		} else {
@@ -107,9 +107,9 @@ export class IndexMap {
 			this.delete(key);
 			return this;
 		}
-		let oldValues = this.map.get(key);
+		const oldValues = this.map.get(key);
 		if (oldValues) {
-			for (let value of oldValues) {
+			for (const value of oldValues) {
 				// Only delete the ones we're not adding back
 				if (!values.has(key)) this.invMap.get(value)?.delete(key);
 				if (!this.invMap.get(value).size) {
@@ -118,7 +118,7 @@ export class IndexMap {
 			}
 		}
 		this.map.set(key, values);
-		for (let value of values) {
+		for (const value of values) {
 			if (!this.invMap.has(value)) this.invMap.set(value, new Set([key]));
 			else this.invMap.get(value)?.add(key);
 		}
@@ -127,11 +127,11 @@ export class IndexMap {
 
 	/** Clears all values for the given key so they can be re-added. */
 	public delete(key: string): boolean {
-		let oldValues = this.map.get(key);
+		const oldValues = this.map.get(key);
 		if (!oldValues) return false;
 
 		this.map.delete(key);
-		for (let value of oldValues) {
+		for (const value of oldValues) {
 			this.invMap.get(value)?.delete(key);
 		}
 
@@ -140,7 +140,7 @@ export class IndexMap {
 
 	/** Rename all references to the given key to a new value. */
 	public rename(oldKey: string, newKey: string): boolean {
-		let oldValues = this.map.get(oldKey);
+		const oldValues = this.map.get(oldKey);
 		if (!oldValues) return false;
 
 		this.delete(oldKey);

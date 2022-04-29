@@ -4,11 +4,9 @@ import {
 	MarkdownPostProcessorContext,
 	MarkdownRenderChild,
 	MarkdownRenderer,
-	TFile,
 } from "obsidian";
 import AttendancePlugin from "./main";
 import {
-	Attendance,
 	AttendanceEntry,
 	AttendanceSource,
 } from "./AttendanceData";
@@ -134,7 +132,7 @@ export async function renderCompactMarkdown(
 	sourcePath: string,
 	component: Component
 ) {
-	let subContainer = container.createSpan();
+	const subContainer = container.createSpan();
 	await MarkdownRenderer.renderMarkdown(
 		markdown,
 		subContainer,
@@ -142,7 +140,7 @@ export async function renderCompactMarkdown(
 		component
 	);
 
-	let paragraph = subContainer.querySelector("p");
+	const paragraph = subContainer.querySelector("p");
 	if (subContainer.children.length == 1 && paragraph) {
 		while (paragraph.firstChild) {
 			subContainer.appendChild(paragraph.firstChild);

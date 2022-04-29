@@ -9,16 +9,17 @@ declare module "obsidian" {
 		on(
 			name: "obsidian-attendance:cache-update",
 			callback: () => void,
-			ctx?: any
 		): EventRef;
 	}
 }
 
 
 interface AttendancePluginSettings {
+	__dummy: null
 }
 
 const DEFAULT_SETTINGS: AttendancePluginSettings = {
+	__dummy: null
 }
 
 export default class AttendancePlugin extends Plugin {

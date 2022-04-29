@@ -101,7 +101,7 @@ export class AttendanceSource {
 		let date: string;
 		let title: string;
 		let query: AttendanceQuery;
-		let attendances: AttendanceEntry[] = [];
+		const attendances: AttendanceEntry[] = [];
 		sourceString.split("\n").forEach((line) => {
 			line = line.trim();
 			if (line.startsWith("date:")) {
