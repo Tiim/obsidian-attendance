@@ -1,4 +1,3 @@
-import { MarkdownSectionInformation } from "obsidian";
 import { CODE_BLOCK } from "./AttendanceRenderer";
 import { SourceCache } from "./SourceCache";
 
@@ -6,7 +5,7 @@ export class Attendance {
 	public readonly date: string;
 	public readonly title: string;
 	public readonly query: AttendanceQuery;
-	public readonly attendances: AttendanceEntry[] = [];
+	public readonly attendances: Attendances;
 	readonly cache: SourceCache;
 
 	constructor(
@@ -19,24 +18,54 @@ export class Attendance {
 		this.date = date;
 		this.title = title;
 		this.query = query;
-		this.attendances = attendances.slice();
+		this.attendances = new Attendances(attendances);
 		this.cache = cache;
 	}
 
 	public getAttendances(): AttendanceEntry[] {
-		return [
-			...this.attendances,
-			...Array.from(this.cache.getFiles(this.query)).map(
-				(file) => new AttendanceEntry(file, "", "")
-			),
-		];
+		return this.attendances.getAttendancesAll(
+			Array.from(this.cache.getFiles(this.query))
+		);
 	}
 
 	public toString(): string {
 		return (
 			`date: ${this.date}\ntitle: ${this.title}\nquery: ${this.query}\n` +
-			this.attendances.map((a) => `* ${a.toString()}`).join("\n")
+			this.attendances.toString()
 		);
+	}
+}
+
+class Attendances {
+	public readonly attendanceList: AttendanceEntry[] = [];
+	public readonly attendanceSet: Set<string> = new Set();
+
+	constructor(attendanceList: AttendanceEntry[]) {
+		this.attendanceList = attendanceList.slice();
+		this.attendanceList.forEach((a) => this.attendanceSet.add(a.link));
+	}
+
+	public getAttendancesAll(implicitLinks: string[]): AttendanceEntry[] {
+		return [
+			...this.attendanceList,
+			...implicitLinks
+				.filter((l) => !this.attendanceSet.has(l))
+				.map((l) => new AttendanceEntry(l, "", "")),
+		];
+	}
+
+	public setState(link: string, state: string, note: string) {
+		if (this.attendanceSet.has(link)) {
+			const index = this.attendanceList.findIndex((a) => a.link === link);
+			this.attendanceList[index] = new AttendanceEntry(link, state, note);
+		} else {
+			this.attendanceList.push(new AttendanceEntry(link, state, note));
+			this.attendanceSet.add(link);
+		}
+	}
+	
+	public toString(): string {
+		return this.attendanceList.map((a) => `* ${a.toString()}`).join("\n");
 	}
 }
 
@@ -75,7 +104,7 @@ export class AttendanceSource {
 		let attendances: AttendanceEntry[] = [];
 		sourceString.split("\n").forEach((line) => {
 			line = line.trim();
-			 if (line.startsWith("date:")) {
+			if (line.startsWith("date:")) {
 				date = line.substring(5).trim();
 			} else if (line.startsWith("title:")) {
 				title = line.substring(6).trim();
@@ -91,50 +120,54 @@ export class AttendanceSource {
 	}
 
 	public async setState(link: string, state: string, note: string) {
-		const i = this.attendance.attendances.findIndex((a) => a.link === link);
-		if (i < 0) {
-			this.attendance.attendances.push(new AttendanceEntry(link, state, note));
-		} else {
-			this.attendance.attendances[i] = new AttendanceEntry(link, state, note);
-		}
-		console.log(this.attendance.attendances);
-		
-		
+		this.attendance.attendances.setState(link, state, note);
 		await this.write();
 	}
 
 	public async write() {
 		const fileContent = await app.vault.adapter.read(this.path);
-		
-		let idxStart, idxEnd
-		let i = 0
+
+		let idxStart, idxEnd;
+		let i = 0;
 		// find codeblock
-		while(i++ < 100) {
-			console.log("start loop")
+		while (i++ < 100) {
+			console.log("start loop");
 			let idx = fileContent.indexOf("```" + CODE_BLOCK, idxStart + 1);
 			idxStart = idx >= 0 ? idx : fileContent.length - 1;
 			idx = fileContent.indexOf("```", idxStart + 3);
 			idxEnd = idx >= 0 ? idx : fileContent.length - 1;
-			
+
 			const codeBlock = fileContent.substring(
 				idxStart + CODE_BLOCK.length + 3,
 				idxEnd
-				);
+			);
 			const p = this.parse(codeBlock);
-				
-			if (idxStart >= fileContent.length -1) {
+
+			if (idxStart >= fileContent.length - 1) {
 				break;
 			}
-			if (p.date === this.attendance.date && p.title === this.attendance.title && p.query.value === this.attendance.query.value) {
+			if (
+				p.date === this.attendance.date &&
+				p.title === this.attendance.title &&
+				p.query.value === this.attendance.query.value
+			) {
 				break;
 			}
-		}		
-		
+		}
+
 		const content = this.attendance.toString();
 		const startContent = fileContent.substring(0, idxStart);
-		const endContent = fileContent.substring(idxEnd+1);
+		const endContent = fileContent.substring(idxEnd + 1);
 		const endBrackets = endContent.startsWith("```") ? "" : "```";
-		const newContent = startContent + "```" + CODE_BLOCK + "\n"+ content + "\n" + endBrackets+ endContent;
+		const newContent =
+			startContent +
+			"```" +
+			CODE_BLOCK +
+			"\n" +
+			content +
+			"\n" +
+			endBrackets +
+			endContent;
 		await app.vault.adapter.write(this.path, newContent);
 	}
 }

@@ -8,3 +8,18 @@
   display: flex;
   justify-content: space-between;
 }
+
+.attendance-content button.present.active {
+  background-color: #007e91;
+  color: #fff;
+}
+
+.attendance-content button.absent.active {
+  background-color: #7b0019;
+  color: #fff;
+}
+
+.attendance-content button.excused.active {
+  background-color: #a35c00;
+  color: #fff;
+}
