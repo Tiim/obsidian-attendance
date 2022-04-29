@@ -1,6 +1,6 @@
 # Obsidian Attendance
 
-This [Obsidian.md](https://obsidian.md/) helps you to keep attendance inside of your notes.
+This plugin for [Obsidian.md](https://obsidian.md/) helps you to keep attendance inside of your notes.
 
 If you like this plugin, consider buying me a coffee.
 
