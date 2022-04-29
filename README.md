@@ -1,44 +1,97 @@
-## Obsidian Sample Plugin
+# Obsidian Attendance
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This [Obsidian.md](https://obsidian.md/) helps you to keep attendance inside of your notes.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+If you like this plugin, consider buying me a coffee.
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/Tiim)
 
-### First time developing plugins?
+**⚠ This plugin is still in early stages of development, expect some bugs and make sure to backup your vault regularly!**
 
-Quick starting guide for new plugin devs:
+## How to use this plugin
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Create a code block with the `attendance` type:
+
+````
+```attendance
+date: 2022-03-26
+title: History Class
+query: #person
+```
+````
+
+The `date`, `title` and `query` fields are all required.
+
+![Attendance List](misc/images/screenshot-1.png)
+
+### The date field
+*currently unused*
+
+The date field lets you specify the date of the event you want to take attendance for. This field is currently unused, but will be used in the future for exporting attendance lists.
+
+### The title field
+*currently unused*
+
+The title field lets you specify the title of the event. This field is currently unused but will be used in the future to allow exporting only certain events. This could for example be set to a specific class name if you are taking attendance for a class.
+
+### The query field
+
+The query field lets you specify what notes are considered possible attendees of the event. The list will include all notes that match the query field. Currently the only query type supported are tag queries.
+
+In the future more query types will be implemented to match the [dataview sources](https://blacksmithgu.github.io/obsidian-dataview/query/sources/).
+
+### Saving the attendance state
+
+When you click on one of the three buttons ("present", "absent", "excused"), the codeblock behind the list will be modified to save the attendance state that you selected. The following shows an example of a codeblock with one present and one excused attendee:
+
+````
+```attendance
+date: 2022-03-26
+title: History Class
+query: #person
+* [[Ray M. Smart.md]], "present", ""
+* [[Winona Philpott.md]], "excused", ""
+```
+````
+![Attendance List with one attendee present and one excused](misc/images/screenshot-2.png)
+
+### Manually installing the plugin
+
+* Download the `main.js`, `styles.css` and `manifest.json` files from the [latest release](https://github.com/Tiim/obsidian-attendance/releases/latest).
+* Create the folder `MyVault/.obsidian/plugins/obsidian-attendance` and put the downloaded files in there.
+* Enable the plugin in the community plugins page in the settings.
+
+
+
+## Contributing
+
+You are more than welcome to contribute to this plugin! You can contribute by:
+
+* Filing issues for bugs you encountered
+* Adding to the documentation
+* Adding a feature request
+* Making a pull request to the code
+
+### How to work on the code
+
+- Clone this repo into the folder `MyTestVault/.obsidian/obsidian-attendance`
+- `npm i` to install dependencies
+- `npm run dev` to start compilation in watch mode.
+
+To conveniently reload the plugin every time you make a change, use the [hot-reload plugin](https://github.com/pjeby/hot-reload).
+
+### Improve code quality with eslint
+
+Run `npm run lint` to see all the errors and `npm run lint -- --fix` to fix all errors that are automatically fixable.
 
 ### Releasing new releases
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
-
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+- Update minimum obsidian version in `manifest.json`.
+- Run `npm version [patch, minor, major]` to update the version.
+- Run `git commit && git push && git push --tags`
+- Run `gh release create $(cat manifest.json | jq ".version" -r) --generate-notes` to create the github release
+- Run `gh release upload $(cat manifest.json | jq ".version" -r) manifest.json styles.css main.js`
 
 ### Adding your plugin to the community plugin list
 
@@ -47,25 +100,6 @@ Quick starting guide for new plugin devs:
 - Make sure you have a `README.md` file in the root of your repo.
 - Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
 
-### How to use
-
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
-
-### Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-### Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
 
 
 ### API Documentation
