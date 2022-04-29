@@ -88,8 +88,9 @@ Run `npm run lint` to see all the errors and `npm run lint -- --fix` to fix all 
 ### Releasing new releases
 
 - Update minimum obsidian version in `manifest.json`.
+- Run `npm run build`
 - Run `npm version [patch, minor, major]` to update the version.
-- Run `git commit && git push && git push --tags`
+- Run `git push && git push --tags`
 - Run `gh release create $(cat manifest.json | jq ".version" -r) --generate-notes` to create the github release
 - Run `gh release upload $(cat manifest.json | jq ".version" -r) manifest.json styles.css main.js`
 

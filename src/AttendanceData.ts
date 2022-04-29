@@ -1,3 +1,4 @@
+import { TFile } from "obsidian";
 import { CODE_BLOCK } from "./AttendanceRenderer";
 import { SourceCache } from "./SourceCache";
 
@@ -125,7 +126,13 @@ export class AttendanceSource {
 	}
 
 	public async write() {
-		const fileContent = await app.vault.adapter.read(this.path);
+		
+		const tfile = app.vault.getAbstractFileByPath(this.path);
+		if (!(tfile instanceof TFile)) {
+			throw new Error(`${this.path} is not an existing file.`);
+		}
+
+		const fileContent = await app.vault.read(tfile);
 
 		let idxStart, idxEnd;
 		let i = 0;
@@ -168,7 +175,7 @@ export class AttendanceSource {
 			"\n" +
 			endBrackets +
 			endContent;
-		await app.vault.adapter.write(this.path, newContent);
+		await app.vault.modify(tfile, newContent);
 	}
 }
 
