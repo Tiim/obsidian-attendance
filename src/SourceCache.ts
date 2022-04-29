@@ -47,6 +47,7 @@ export class SourceCache extends Component {
 		if (file instanceof TFile) {
 			this.tags.delete(file.path);
 		}
+		this.touch("delete")
 	}
 
 	private reloadFile(file: TFile) {
