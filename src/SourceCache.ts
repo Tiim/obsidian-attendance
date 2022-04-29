@@ -6,7 +6,7 @@ import {
 	TAbstractFile,
 	TFile,
 } from "obsidian";
-import { AttendanceSource } from "./AttendanceData";
+import { AttendanceQuery } from "./AttendanceData";
 import AttendancePlugin from "./main";
 import {expandTag} from "./util/expand-tag";
 
@@ -66,7 +66,7 @@ export class SourceCache extends Component {
 		this.trigger(EVENT_CACHE_UPDATE, reason);
 	}
 
-	public getFiles(source: AttendanceSource): Set<string> {
+	public getFiles(source: AttendanceQuery): Set<string> {
 		if (source.type === "tag") {
 			return this.tags.getInverse(source.value);
 		}

@@ -1,0 +1,10 @@
+.attendance-content ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.attendance-content li {
+  display: flex;
+  justify-content: space-between;
+}

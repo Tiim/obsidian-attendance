@@ -1,11 +1,12 @@
-import { App, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownRenderer, TFile } from "obsidian";
+import { App, Component, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownRenderer, TFile } from "obsidian";
 import AttendancePlugin from "./main";
-import {Attendance, AttendanceEntry, parseAttendanceSource} from "./AttendanceData";
+import {Attendance, AttendanceEntry, AttendanceSource} from "./AttendanceData";
 import { EVENT_CACHE_UPDATE, SourceCache } from "./SourceCache";
+import {Link} from "./util/link";
 
 
 
-
+export const CODE_BLOCK = "attendance";
 
 
 export class AttendanceRenderer {
@@ -22,8 +23,8 @@ export class AttendanceRenderer {
 		this.app = plugin.app;
 		this.cache = cache;
 
-		const processor = plugin.registerMarkdownCodeBlockProcessor(
-			"attendance",
+		plugin.registerMarkdownCodeBlockProcessor(
+			CODE_BLOCK,
 			this.addQueryRenderChild.bind(this)
 		);
 	}
@@ -34,7 +35,7 @@ export class AttendanceRenderer {
 		context: MarkdownPostProcessorContext
 	) {
 
-		const attendance = parseAttendanceSource(source, this.cache);
+		const attendance = new AttendanceSource(source, this.cache, context.sourcePath);
 		const renderChild = new AttendanceRenderChild({
 			context,
 			container: element,
@@ -50,7 +51,7 @@ export class AttendanceRenderer {
 class AttendanceRenderChild extends MarkdownRenderChild {
 	private readonly context: MarkdownPostProcessorContext;
 
-	constructor(args: {context: MarkdownPostProcessorContext, container: HTMLElement, attendance: Attendance, app: App}) {
+	constructor(args: {context: MarkdownPostProcessorContext, container: HTMLElement, attendance: AttendanceSource, app: App}) {
 		super(args.container);
 		this.context = args.context;
 		this.render(args.attendance);
@@ -59,19 +60,50 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 	}
 
 
-	private render(a: Attendance) {
+	private render(a: AttendanceSource) {
 		this.containerEl.innerHTML = "";
-		const content = this.containerEl.firstChild || this.containerEl.createDiv();
-		const ul = content.createEl("ul");
-		a.getAttendances().forEach((a) => this.renderListItem(a, ul));
+		const content = this.containerEl.createDiv({cls: "attendance-content"});
+		if (a.error) {
+			content.createEl("pre", {cls: "error", text: a.error.message});
+		} else {
+			const ul = content.createEl("ul");
+			a.attendance.getAttendances().forEach((at) => this.renderListItem(at, ul, a));
+		}
 	}
 
-	private renderListItem(a: AttendanceEntry, ul: HTMLElement) {
+	private renderListItem(a: AttendanceEntry, ul: HTMLElement, source: AttendanceSource) {
 		const li = ul.createEl("li");
+		renderCompactMarkdown(new Link(a.link).markdown(), li, this.context.sourcePath, this);
+		const c = li.createEl("span");
+		const b1 = c.createEl("button", {cls: "present", text: "✓"});
+		b1.onclick = () => source.setState(a.link, "present", a.note);
+		const b2 = c.createEl("button", {cls: "absent", text: "✗"});
+		b2.onclick = () => source.setState(a.link, "absent", a.note);
+		const b3 = c.createEl("button", {cls: "excused", text: "⏲"});
+		b3.onclick = () => source.setState(a.link, "excused", a.note);
+	}
+}
 
-		console.log("Render item", a);
-		
 
-		MarkdownRenderer.renderMarkdown("[["+ a.link + "]], ", li, this.context.sourcePath, this);
-	} 
+export async function renderCompactMarkdown(
+	markdown: string,
+	container: HTMLElement,
+	sourcePath: string,
+	component: Component
+) {
+	let subContainer = container.createSpan();
+	await MarkdownRenderer.renderMarkdown(
+		markdown,
+		subContainer,
+		sourcePath,
+		component
+	);
+
+	let paragraph = subContainer.querySelector("p");
+	if (subContainer.children.length == 1 && paragraph) {
+		while (paragraph.firstChild) {
+			subContainer.appendChild(paragraph.firstChild);
+		}
+		subContainer.removeChild(paragraph);
+	}
 }

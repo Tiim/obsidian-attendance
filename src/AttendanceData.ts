@@ -1,55 +1,142 @@
+import { MarkdownSectionInformation } from "obsidian";
+import { CODE_BLOCK } from "./AttendanceRenderer";
 import { SourceCache } from "./SourceCache";
 
 export class Attendance {
 	public readonly date: string;
 	public readonly title: string;
-	public readonly source: AttendanceSource;
+	public readonly query: AttendanceQuery;
 	public readonly attendances: AttendanceEntry[] = [];
-	private readonly cache: SourceCache;
+	readonly cache: SourceCache;
 
-  constructor(date: string, title: string, source: AttendanceSource, attendances: AttendanceEntry[], cache: SourceCache) {
-    this.date = date;
-    this.title = title;
-    this.source = source;
-    this.attendances = attendances.slice();	
+	constructor(
+		date: string,
+		title: string,
+		query: AttendanceQuery,
+		attendances: AttendanceEntry[],
+		cache: SourceCache
+	) {
+		this.date = date;
+		this.title = title;
+		this.query = query;
+		this.attendances = attendances.slice();
 		this.cache = cache;
 	}
 
 	public getAttendances(): AttendanceEntry[] {
-		return [...this.attendances, 
-			...Array.from(this.cache.getFiles(this.source))
-			.map((file) => (new AttendanceEntry(file, "", "")))];
+		return [
+			...this.attendances,
+			...Array.from(this.cache.getFiles(this.query)).map(
+				(file) => new AttendanceEntry(file, "", "")
+			),
+		];
+	}
+
+	public toString(): string {
+		return (
+			`date: ${this.date}\ntitle: ${this.title}\nquery: ${this.query}\n` +
+			this.attendances.map((a) => `* ${a.toString()}`).join("\n")
+		);
 	}
 }
 
-export function parseAttendanceSource(sourceString: string, cache: SourceCache) {
-	let date: string;
-	let title: string;
-	let source: AttendanceSource;
-	let attendances: AttendanceEntry[] = [];
+export class AttendanceSource {
+	public attendance: Attendance;
+	public readonly path: string;
+	public readonly error: Error;
 
-	sourceString.split("\n").forEach((line) => {
-		line = line.trim();
-		if (line.startsWith("date:")) {
-			date = line.substring(5).trim();
-		} else if (line.startsWith("title:")) {
-			title = line.substring(6).trim();
-		} else if (line.startsWith("source:")) {
-			source = AttendanceSource.parse(line.substring(7).trim());
-		} else if (line.startsWith("*")) {
-			attendances.push(
-				AttendanceEntry.parse(line.substring(1).trim())
+	constructor(sourceString: string, cache: SourceCache, path: string) {
+		this.path = path;
+
+		try {
+			const { date, title, query, attendances } =
+				this.parse(sourceString);
+			if (!date || !title || !query) {
+				throw new Error(
+					"The elements 'date:' and 'title:' and 'query:' are required."
+				);
+			}
+			this.attendance = new Attendance(
+				date,
+				title,
+				query,
+				attendances,
+				cache
 			);
+		} catch (e) {
+			this.error = e;
 		}
-	});
-
-	if (!date || !title || !source) {
-		throw new Error(
-			"The elements 'date:' and 'title:' and 'source:' are required."
-		);
 	}
 
-	return new Attendance(date, title, source, attendances, cache);
+	private parse(sourceString: string) {
+		let date: string;
+		let title: string;
+		let query: AttendanceQuery;
+		let attendances: AttendanceEntry[] = [];
+		sourceString.split("\n").forEach((line) => {
+			line = line.trim();
+			 if (line.startsWith("date:")) {
+				date = line.substring(5).trim();
+			} else if (line.startsWith("title:")) {
+				title = line.substring(6).trim();
+			} else if (line.startsWith("query:")) {
+				query = AttendanceQuery.parse(line.substring(6).trim());
+			} else if (line.startsWith("*")) {
+				attendances.push(
+					AttendanceEntry.parse(line.substring(1).trim())
+				);
+			}
+		});
+		return { date, title, query, attendances };
+	}
+
+	public async setState(link: string, state: string, note: string) {
+		const i = this.attendance.attendances.findIndex((a) => a.link === link);
+		if (i < 0) {
+			this.attendance.attendances.push(new AttendanceEntry(link, state, note));
+		} else {
+			this.attendance.attendances[i] = new AttendanceEntry(link, state, note);
+		}
+		console.log(this.attendance.attendances);
+		
+		
+		await this.write();
+	}
+
+	public async write() {
+		const fileContent = await app.vault.adapter.read(this.path);
+		
+		let idxStart, idxEnd
+		let i = 0
+		// find codeblock
+		while(i++ < 100) {
+			console.log("start loop")
+			let idx = fileContent.indexOf("```" + CODE_BLOCK, idxStart + 1);
+			idxStart = idx >= 0 ? idx : fileContent.length - 1;
+			idx = fileContent.indexOf("```", idxStart + 3);
+			idxEnd = idx >= 0 ? idx : fileContent.length - 1;
+			
+			const codeBlock = fileContent.substring(
+				idxStart + CODE_BLOCK.length + 3,
+				idxEnd
+				);
+			const p = this.parse(codeBlock);
+				
+			if (idxStart >= fileContent.length -1) {
+				break;
+			}
+			if (p.date === this.attendance.date && p.title === this.attendance.title && p.query.value === this.attendance.query.value) {
+				break;
+			}
+		}		
+		
+		const content = this.attendance.toString();
+		const startContent = fileContent.substring(0, idxStart);
+		const endContent = fileContent.substring(idxEnd+1);
+		const endBrackets = endContent.startsWith("```") ? "" : "```";
+		const newContent = startContent + "```" + CODE_BLOCK + "\n"+ content + "\n" + endBrackets+ endContent;
+		await app.vault.adapter.write(this.path, newContent);
+	}
 }
 
 export class AttendanceEntry {
@@ -79,9 +166,13 @@ export class AttendanceEntry {
 		const note = parts[2].substring(1, parts[2].length - 1);
 		return new AttendanceEntry(link, state, note);
 	}
+
+	public toString(): string {
+		return `[[${this.link}]], "${this.state}", "${this.note}"`;
+	}
 }
 
-export class AttendanceSource {
+export class AttendanceQuery {
 	public readonly type: "tag";
 	public readonly value: string;
 
@@ -90,7 +181,11 @@ export class AttendanceSource {
 		this.value = value;
 	}
 
-	static parse(source: string): AttendanceSource {
-		return new AttendanceSource("tag", source);
+	static parse(query: string): AttendanceQuery {
+		return new AttendanceQuery("tag", query);
+	}
+
+	toString(): string {
+		return this.value;
 	}
 }
