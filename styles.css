@@ -46,3 +46,24 @@
   padding: 0rem 0.5rem;
   margin: 0px;
 }
+
+@media only print {
+  .attendance-content li.inactive {
+    display: none;
+  }
+
+  .attendance-content button:not(.active) {
+    display: none;
+  }
+
+  .attendance-content button {
+    background-color: transparent !important;
+    color: transparent;
+    visibility: hidden;
+  }
+  .attendance-content button::after {
+    color: black;
+    content: attr(data-print-name);
+    visibility: visible;
+  }
+}

@@ -96,7 +96,11 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		ul: HTMLElement,
 		source: AttendanceSource
 	) {
-		const li = ul.createEl("li");
+
+		const state = a.state;
+		const cls = state === ""? "inactive": state;
+
+		const li = ul.createEl("li", {cls});
 		renderCompactMarkdown(
 			new Link(a.link).markdown(),
 			li,
@@ -109,18 +113,27 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 			`${btn} ${state === btn ? "active" : ""}`;
 
 		const b1 = c.createEl("button", {
-			cls: getClass("present", a.state),
+			cls: getClass("present", state),
 			text: "✓",
+			attr: {
+				"data-print-name": "Present",
+			}
 		});
 		b1.onclick = () => source.setState(a.link, "present", a.note);
 		const b2 = c.createEl("button", {
-			cls: getClass("absent", a.state),
+			cls: getClass("absent", state),
 			text: "✗",
+			attr: {
+				"data-print-name": "Absent",
+			}
 		});
 		b2.onclick = () => source.setState(a.link, "absent", a.note);
 		const b3 = c.createEl("button", {
-			cls: getClass("excused", a.state),
+			cls: getClass("excused", state),
 			text: "⏲",
+			attr: {
+				"data-print-name": "Excused",
+			}
 		});
 		b3.onclick = () => source.setState(a.link, "excused", a.note);
 	}
