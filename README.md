@@ -106,3 +106,9 @@ Run `npm run lint` to see all the errors and `npm run lint -- --fix` to fix all 
 ### API Documentation
 
 See https://github.com/obsidianmd/obsidian-api
+
+### Code from other plugins
+
+This plugin uses snippets from the following plugins:
+
+* Obsidian Dataview
