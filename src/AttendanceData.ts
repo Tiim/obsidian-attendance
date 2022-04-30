@@ -47,12 +47,16 @@ class Attendances {
 	}
 
 	public getAttendancesAll(implicitLinks: string[]): AttendanceEntry[] {
-		return [
+		const array = [
 			...this.attendanceList,
 			...implicitLinks
 				.filter((l) => !this.attendanceSet.has(l))
 				.map((l) => new AttendanceEntry(l, "", "")),
 		];
+
+		array.sort()
+
+		return array;
 	}
 
 	public setState(link: string, state: string, note: string) {
