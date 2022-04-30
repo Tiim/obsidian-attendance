@@ -136,9 +136,8 @@ export class AttendanceSource {
 
 		let idxStart, idxEnd;
 		let i = 0;
-		// find codeblock
+		// find codeblock manually
 		while (i++ < 100) {
-			console.log("start loop");
 			let idx = fileContent.indexOf("```" + CODE_BLOCK, idxStart + 1);
 			idxStart = idx >= 0 ? idx : fileContent.length - 1;
 			idx = fileContent.indexOf("```", idxStart + 3);

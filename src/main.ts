@@ -15,11 +15,12 @@ declare module "obsidian" {
 
 
 interface AttendancePluginSettings {
-	__dummy: null
+	// Just here so eslint won't complain, will be removed when there are some actual settings
+	__dummy: undefined;
 }
 
 const DEFAULT_SETTINGS: AttendancePluginSettings = {
-	__dummy: null
+	__dummy: undefined
 }
 
 export default class AttendancePlugin extends Plugin {

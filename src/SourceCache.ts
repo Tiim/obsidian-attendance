@@ -30,7 +30,7 @@ export class SourceCache extends Component {
 		);
 		this.registerEvent(app.vault.on("rename", (f, o) => this.rename(f, o)));
 		this.registerEvent(app.vault.on("delete", (file) => this.delete(file)));
-
+		this.registerEvent(this.cache.on("resolve", (file) => this.reloadFile(file)));
 
 		app.vault.getMarkdownFiles().forEach((file) => this.reloadFile(file));
 
@@ -53,17 +53,19 @@ export class SourceCache extends Component {
 	private reloadFile(file: TFile) {
 		const fc = this.cache.getFileCache(file);
 		const tags = new Set<string>();
+		// files that are not in the cache yet, will be handled by the "resolve" event
 		if (fc) {
 			getAllTags(fc)
 				.flatMap(expandTag)
 				.forEach((tag) => tags.add(tag));
 		}
+
 		this.tags.set(file.path, tags);
 		this.touch("reload");
 	}
 
 	private touch(reason : string) {
-		console.log("Update source cache [%s] ", reason , this.tags);
+		//console.log("Update source cache [%s] ", reason , this.tags);
 		this.trigger(EVENT_CACHE_UPDATE, reason);
 	}
 
