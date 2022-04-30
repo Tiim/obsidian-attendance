@@ -103,7 +103,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 			this.context.sourcePath,
 			this
 		);
-		const c = li.createEl("span");
+		const c = li.createEl("span", {cls: "btn-list"});
 
 		const getClass = (btn: string, state: string) =>
 			`${btn} ${state === btn ? "active" : ""}`;
