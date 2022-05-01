@@ -11,6 +11,10 @@
   margin: 5px 0px;
 }
 
+.attendance-content li span {
+  white-space: nowrap;
+}
+
 @media only screen and (max-width: 500px) {
   .attendance-content li {
     flex-direction: column;
@@ -21,30 +25,22 @@
   }
 }
 
-.attendance-content button.present.active {
-  background-color: #007e91;
-  color: #fff;
-}
-
-.attendance-content button.absent.active {
-  background-color: #7b0019;
-  color: #fff;
-}
-
-.attendance-content button.excused.active {
-  background-color: #a35c00;
+.attendance-content button.active {
+  background-color: var(--bg-color);
   color: #fff;
 }
 
 .attendance-content .btn-list {
   display: flex;
-  justify-content: center;
+  justify-content: end;
   gap: 5px;
 }
 
 .attendance-content button {
-  padding: 0rem 0.5rem;
+  padding: 0px;
   margin: 0px;
+  width: 22px;
+  height: 22px;
 }
 
 @media only print {
@@ -60,10 +56,26 @@
     background-color: transparent !important;
     color: transparent;
     visibility: hidden;
+    flex-grow: 1;
+    width: auto;
   }
-  .attendance-content button::after {
+  .attendance-content button::before {
+    display: block;
+    padding: 0rem 0.5rem;
     color: black;
     content: attr(data-print-name);
     visibility: visible;
   }
+}
+
+.attendance-setting .sub-setting {
+  border-top: 0px;
+}
+
+.attendance-setting .color-preview {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  background-color: var(--preview-color);
 }

@@ -5,7 +5,7 @@ import {
 	MarkdownRenderChild,
 	MarkdownRenderer,
 } from "obsidian";
-import AttendancePlugin from "./main";
+import AttendancePlugin, { AttendanceStateSetting } from "./main";
 import {
 	AttendanceEntry,
 	AttendanceSource,
@@ -18,16 +18,20 @@ export const CODE_BLOCK = "attendance";
 export class AttendanceRenderer {
 	private readonly app: App;
 	private readonly cache: SourceCache;
+	private readonly states: AttendanceStateSetting[];
 
 	constructor({
 		plugin,
 		cache,
+		states,
 	}: {
 		plugin: AttendancePlugin;
 		cache: SourceCache;
+		states: AttendanceStateSetting[];
 	}) {
 		this.app = plugin.app;
 		this.cache = cache;
+		this.states = states;
 
 		plugin.registerMarkdownCodeBlockProcessor(
 			CODE_BLOCK,
@@ -45,12 +49,15 @@ export class AttendanceRenderer {
 			this.cache,
 			context.sourcePath
 		);
+		
 		const renderChild = new AttendanceRenderChild({
 			context,
 			container: element,
 			attendance,
 			app: this.app,
+			states: this.states,
 		});
+		
 
 		context.addChild(renderChild);
 	}
@@ -58,17 +65,20 @@ export class AttendanceRenderer {
 
 class AttendanceRenderChild extends MarkdownRenderChild {
 	private readonly context: MarkdownPostProcessorContext;
+	private readonly states: AttendanceStateSetting[];
 
 	constructor(args: {
 		context: MarkdownPostProcessorContext;
 		container: HTMLElement;
 		attendance: AttendanceSource;
 		app: App;
+		states: AttendanceStateSetting[];
 	}) {
 		super(args.container);
 		this.context = args.context;
+		this.states = args.states;
+		
 		this.render(args.attendance);
-
 		this.registerEvent(
 			args.app.workspace.on(EVENT_CACHE_UPDATE, () =>
 				this.render(args.attendance)
@@ -97,10 +107,9 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		source: AttendanceSource
 	) {
 
-		const state = a.state;
-		const cls = state === ""? "inactive": state;
+		const itemState = a.state;
 
-		const li = ul.createEl("li", {cls});
+		const li = ul.createEl("li", {cls: itemState === ""? "inactive": itemState});
 		renderCompactMarkdown(
 			new Link(a.link).markdown(),
 			li,
@@ -112,30 +121,19 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		const getClass = (btn: string, state: string) =>
 			`${btn} ${state === btn ? "active" : ""}`;
 
-		const b1 = c.createEl("button", {
-			cls: getClass("present", state),
-			text: "✓",
-			attr: {
-				"data-print-name": "Present",
-			}
-		});
-		b1.onclick = () => source.setState(a.link, "present", a.note);
-		const b2 = c.createEl("button", {
-			cls: getClass("absent", state),
-			text: "✗",
-			attr: {
-				"data-print-name": "Absent",
-			}
-		});
-		b2.onclick = () => source.setState(a.link, "absent", a.note);
-		const b3 = c.createEl("button", {
-			cls: getClass("excused", state),
-			text: "⏲",
-			attr: {
-				"data-print-name": "Excused",
-			}
-		});
-		b3.onclick = () => source.setState(a.link, "excused", a.note);
+
+		this.states.forEach((state) => {
+			const btn = c.createEl("button", {
+				cls: getClass(state.name, itemState),
+				text: state.icon,
+				attr: {
+					"data-print-name": state.name,
+					"aria-label": state.name,
+					"style": `--bg-color: ${state.color}`,
+				}
+			});
+			btn.onclick = () => source.setState(a.link, state.name, "");
+		})
 	}
 }
 
