@@ -1,12 +1,17 @@
 import { TFile } from "obsidian";
 import { CODE_BLOCK } from "./AttendanceRenderer";
+import { AttendanceQuery } from "./Query";
 import { SourceCache } from "./SourceCache";
 
+/**
+ * Data structure holding attendance data for a single codeblock.
+ */
 export class Attendance {
 	public readonly date: string;
 	public readonly title: string;
 	public readonly query: AttendanceQuery;
 	public readonly attendances: Attendances;
+	/** Global cache */
 	readonly cache: SourceCache;
 
 	constructor(
@@ -25,7 +30,7 @@ export class Attendance {
 
 	public getAttendances(): AttendanceEntry[] {
 		return this.attendances.getAttendancesAll(
-			Array.from(this.cache.getFiles(this.query))
+			Array.from(this.cache.getMatchingFiles(this.query))
 		);
 	}
 
@@ -37,6 +42,9 @@ export class Attendance {
 	}
 }
 
+/**
+ * Data structure for the list of attendees and their attendance status.
+ */
 class Attendances {
 	public readonly attendanceList: AttendanceEntry[] = [];
 	public readonly attendanceSet: Set<string> = new Set();
@@ -54,7 +62,7 @@ class Attendances {
 				.map((l) => new AttendanceEntry(l, "", "")),
 		];
 
-		array.sort()
+		array.sort();
 
 		return array;
 	}
@@ -68,13 +76,16 @@ class Attendances {
 			this.attendanceSet.add(link);
 		}
 	}
-	
+
 	public toString(): string {
 		return this.attendanceList.map((a) => `* ${a.toString()}`).join("\n");
 	}
 }
 
-export class AttendanceSource {
+/**
+ * Represents a codeblock with attendance data.
+ */
+export class AttendanceCodeblock {
 	public attendance: Attendance;
 	public readonly path: string;
 	public readonly error: Error;
@@ -130,7 +141,6 @@ export class AttendanceSource {
 	}
 
 	public async write() {
-		
 		const tfile = app.vault.getAbstractFileByPath(this.path);
 		if (!(tfile instanceof TFile)) {
 			throw new Error(`${this.path} is not an existing file.`);
@@ -159,7 +169,7 @@ export class AttendanceSource {
 			if (
 				p.date === this.attendance.date &&
 				p.title === this.attendance.title &&
-				p.query.value === this.attendance.query.value
+				AttendanceQuery.equals(p.query, this.attendance.query)
 			) {
 				break;
 			}
@@ -182,6 +192,9 @@ export class AttendanceSource {
 	}
 }
 
+/**
+ * Represents a single attendee and their state
+ */
 export class AttendanceEntry {
 	public readonly link: string;
 	public readonly state: string;
@@ -212,23 +225,5 @@ export class AttendanceEntry {
 
 	public toString(): string {
 		return `[[${this.link}]], "${this.state}", "${this.note}"`;
-	}
-}
-
-export class AttendanceQuery {
-	public readonly type: "tag";
-	public readonly value: string;
-
-	constructor(type: "tag", value: string) {
-		this.type = type;
-		this.value = value;
-	}
-
-	static parse(query: string): AttendanceQuery {
-		return new AttendanceQuery("tag", query);
-	}
-
-	toString(): string {
-		return this.value;
 	}
 }

@@ -5,22 +5,25 @@ import {
 	MetadataCache,
 	TAbstractFile,
 	TFile,
+	TFolder,
+	Vault,
 } from "obsidian";
-import { AttendanceQuery } from "./AttendanceData";
+import { AttendanceQuery } from "./Query";
 import AttendancePlugin from "./main";
-import {expandTag} from "./util/expand-tag";
+import { expandTag } from "./util/expand-tag";
 
 export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
-
 
 export class SourceCache extends Component {
 	/** Map paths to tags */
 	private readonly tags = new IndexMap();
+	private readonly folders;
 	private readonly cache: MetadataCache;
 	private readonly trigger: (name: string, reason: string) => void;
 
 	constructor(app: App, plugin: AttendancePlugin) {
 		super();
+		this.folders = new PrefixIndex(app.vault);
 		plugin.addChild(this);
 
 		this.cache = app.metadataCache;
@@ -30,10 +33,11 @@ export class SourceCache extends Component {
 		);
 		this.registerEvent(app.vault.on("rename", (f, o) => this.rename(f, o)));
 		this.registerEvent(app.vault.on("delete", (file) => this.delete(file)));
-		this.registerEvent(this.cache.on("resolve", (file) => this.reloadFile(file)));
+		this.registerEvent(
+			this.cache.on("resolve", (file) => this.reloadFile(file))
+		);
 
 		app.vault.getMarkdownFiles().forEach((file) => this.reloadFile(file));
-
 	}
 
 	private rename(file: TAbstractFile, oldPath: string) {
@@ -47,7 +51,7 @@ export class SourceCache extends Component {
 		if (file instanceof TFile) {
 			this.tags.delete(file.path);
 		}
-		this.touch("delete")
+		this.touch("delete");
 	}
 
 	private reloadFile(file: TFile) {
@@ -64,14 +68,20 @@ export class SourceCache extends Component {
 		this.touch("reload");
 	}
 
-	private touch(reason : string) {
+	private touch(reason: string) {
 		//console.log("Update source cache [%s] ", reason , this.tags);
 		this.trigger(EVENT_CACHE_UPDATE, reason);
 	}
 
-	public getFiles(source: AttendanceQuery): Set<string> {
-		if (source.type === "tag") {
-			return this.tags.getInverse(source.value);
+	public getMatchingFiles(source: AttendanceQuery): Set<string> {
+		switch (source.query.type) {
+			case "tag":
+				return this.tags.getInverse(source.query.tag);
+			case "folder":
+				if (this.folders.nodeExists(source.query.folder)) {
+					return this.folders.get(source.query.folder);
+				}
+				throw new Error(`Folder "${source.query.folder}" not found`);
 		}
 	}
 }
@@ -158,4 +168,50 @@ export class IndexMap {
 	}
 
 	static EMPTY_SET: Readonly<Set<string>> = Object.freeze(new Set<string>());
+}
+
+/** Indexes files by their full prefix - essentially a simple prefix tree. */
+export class PrefixIndex extends Component {
+	private readonly vault: Vault;
+
+	constructor(vault: Vault) {
+		super();
+		this.vault = vault;
+	}
+
+	private *walk(
+		folder: TFolder,
+		filter?: (path: string) => boolean
+	): Generator<string> {
+		for (const file of folder.children) {
+			if (file instanceof TFolder) {
+				yield* this.walk(file, filter);
+			} else if (filter ? filter(file.path) : true) {
+				yield file.path;
+			}
+		}
+	}
+
+	/** Get the list of all files under the given path. */
+	public get(
+		prefix: string,
+		filter?: (path: string) => boolean
+	): Set<string> {
+		let folder = this.vault.getAbstractFileByPath(prefix || "/");
+		return new Set(
+			folder instanceof TFolder ? this.walk(folder, filter) : []
+		);
+	}
+
+	/** Determines if the given path exists in the prefix index. */
+	public pathExists(path: string): boolean {
+		return this.vault.getAbstractFileByPath(path || "/") != null;
+	}
+
+	/** Determines if the given prefix exists in the prefix index. */
+	public nodeExists(prefix: string): boolean {
+		return (
+			this.vault.getAbstractFileByPath(prefix || "/") instanceof TFolder
+		);
+	}
 }

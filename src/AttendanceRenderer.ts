@@ -6,10 +6,7 @@ import {
 	MarkdownRenderer,
 } from "obsidian";
 import AttendancePlugin, { AttendanceStateSetting } from "./main";
-import {
-	AttendanceEntry,
-	AttendanceSource,
-} from "./AttendanceData";
+import { AttendanceEntry, AttendanceCodeblock } from "./AttendanceData";
 import { EVENT_CACHE_UPDATE, SourceCache } from "./SourceCache";
 import { Link } from "./util/link";
 
@@ -44,12 +41,12 @@ export class AttendanceRenderer {
 		element: HTMLElement,
 		context: MarkdownPostProcessorContext
 	) {
-		const attendance = new AttendanceSource(
+		const attendance = new AttendanceCodeblock(
 			source,
 			this.cache,
 			context.sourcePath
 		);
-		
+
 		const renderChild = new AttendanceRenderChild({
 			context,
 			container: element,
@@ -57,7 +54,6 @@ export class AttendanceRenderer {
 			app: this.app,
 			states: this.states,
 		});
-		
 
 		context.addChild(renderChild);
 	}
@@ -70,14 +66,14 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 	constructor(args: {
 		context: MarkdownPostProcessorContext;
 		container: HTMLElement;
-		attendance: AttendanceSource;
+		attendance: AttendanceCodeblock;
 		app: App;
 		states: AttendanceStateSetting[];
 	}) {
 		super(args.container);
 		this.context = args.context;
 		this.states = args.states;
-		
+
 		this.render(args.attendance);
 		this.registerEvent(
 			args.app.workspace.on(EVENT_CACHE_UPDATE, () =>
@@ -86,41 +82,53 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		);
 	}
 
-	private render(a: AttendanceSource) {
+	private render(a: AttendanceCodeblock) {
 		this.containerEl.innerHTML = "";
 		const content = this.containerEl.createDiv({
 			cls: "attendance-content",
 		});
 		if (a.error) {
-			content.createEl("pre", { cls: "error", text: a.error.message });
-		} else {
-			const ul = content.createEl("ul");
+			this.renderError("Parsing", a.error.message);
+			return;
+		}
+		const ul = content.createEl("ul");
+		try {
 			a.attendance
 				.getAttendances()
 				.forEach((at) => this.renderListItem(at, ul, a));
+		} catch (e) {
+			this.renderError("Execution", e.message);
 		}
+	}
+
+	private renderError(type: string, errorMessage: string) {
+		this.containerEl.innerHTML = "";
+		this.containerEl.createEl("pre", {
+			cls: "error",
+			text: `${type} error: ${errorMessage}`,
+		});
 	}
 
 	private renderListItem(
 		a: AttendanceEntry,
 		ul: HTMLElement,
-		source: AttendanceSource
+		source: AttendanceCodeblock
 	) {
-
 		const itemState = a.state;
 
-		const li = ul.createEl("li", {cls: itemState === ""? "inactive": itemState});
+		const li = ul.createEl("li", {
+			cls: itemState === "" ? "inactive" : itemState,
+		});
 		renderCompactMarkdown(
 			new Link(a.link).markdown(),
 			li,
 			this.context.sourcePath,
 			this
 		);
-		const c = li.createEl("span", {cls: "btn-list"});
+		const c = li.createEl("span", { cls: "btn-list" });
 
 		const getClass = (btn: string, state: string) =>
 			`${btn} ${state === btn ? "active" : ""}`;
-
 
 		this.states.forEach((state) => {
 			const btn = c.createEl("button", {
@@ -129,11 +137,11 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 				attr: {
 					"data-print-name": state.name,
 					"aria-label": state.name,
-					"style": `--bg-color: ${state.color}`,
-				}
+					style: `--bg-color: ${state.color}`,
+				},
 			});
 			btn.onclick = () => source.setState(a.link, state.name, "");
-		})
+		});
 	}
 }
 
