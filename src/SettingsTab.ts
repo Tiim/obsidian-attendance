@@ -13,7 +13,7 @@ export class AttendanceSettingsTab extends PluginSettingTab {
 	display() {
 		const container = this.containerEl;
 		container.empty();
-    container.classList.add("attendance-setting")
+		container.classList.add("attendance-setting");
 
 		container.createEl("h1", { text: "Attendance Plugin Settings" });
 		container
@@ -35,6 +35,24 @@ export class AttendanceSettingsTab extends PluginSettingTab {
 				this.settingChange(true);
 			});
 		});
+		this.renderCredits(container);
+	}
+
+	private renderCredits(container: HTMLElement) {
+		const div = container.createDiv({
+			cls: "credits",
+			text: "I hope you like this plugin! If you do, please consider donating using the button below.",
+		});
+
+		div.createEl("a", {
+			href: "https://www.buymeacoffee.com/Tiim",
+		}).createEl("img", {
+			attr: {
+				src: "https://cdn.buymeacoffee.com/buttons/default-violet.png",
+				alt: "Buy Me A Coffee",
+				style: "height: 60px !important;width: 217px !important;",
+			},
+		});
 	}
 
 	private settingChange(rerender = false) {
@@ -45,12 +63,13 @@ export class AttendanceSettingsTab extends PluginSettingTab {
 		}
 	}
 
-	renderState(
+	private renderState(
 		index: number,
 		state: AttendanceStateSetting,
 		container: HTMLElement
 	) {
 		const setting = new Setting(container)
+			.setClass("title-setting")
 			.setName("State: " + state.name)
 			.setDesc("Move the state up or down, or delete this state.");
 		if (index > 0) {
