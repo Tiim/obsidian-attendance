@@ -11,18 +11,22 @@ import {
 import { AttendanceQuery } from "./Query";
 import AttendancePlugin from "./main";
 import { expandTag } from "./util/expand-tag";
+import { AttendanceCodeblock } from "./AttendanceData";
 
 export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
 
 export class SourceCache extends Component {
 	/** Map paths to tags */
+	private readonly app: App;
 	private readonly tags = new IndexMap();
 	private readonly folders;
+	private readonly codeblocks = new CodeBlockCache();
 	private readonly cache: MetadataCache;
 	private readonly trigger: (name: string, reason: string) => void;
 
 	constructor(app: App, plugin: AttendancePlugin) {
 		super();
+		this.app = app;
 		this.folders = new PrefixIndex(app.vault);
 		plugin.addChild(this);
 
@@ -43,6 +47,7 @@ export class SourceCache extends Component {
 	private rename(file: TAbstractFile, oldPath: string) {
 		if (file instanceof TFile) {
 			this.tags.rename(oldPath, file.path);
+			this.codeblocks.rename(oldPath, file.path);
 		}
 		this.touch("rename");
 	}
@@ -50,6 +55,7 @@ export class SourceCache extends Component {
 	private delete(file: TAbstractFile) {
 		if (file instanceof TFile) {
 			this.tags.delete(file.path);
+			this.codeblocks.delete(file.path);
 		}
 		this.touch("delete");
 	}
@@ -63,8 +69,14 @@ export class SourceCache extends Component {
 				.flatMap(expandTag)
 				.forEach((tag) => tags.add(tag));
 		}
-
 		this.tags.set(file.path, tags);
+
+		// use promises, this is not an async function
+		AttendanceCodeblock.parseAllCodeblocksInFile(file).then((blocks) => {
+			this.codeblocks.set(file.path, blocks);
+			this.touch("reload");
+		});
+
 		this.touch("reload");
 	}
 
@@ -86,18 +98,48 @@ export class SourceCache extends Component {
 	}
 }
 
+export class CodeBlockCache {
+	private static readonly EMPTY_SET: Readonly<Set<AttendanceCodeblock>> =
+		Object.freeze(new Set<AttendanceCodeblock>());
+	/** Maps files to codeblocks in that file */
+	private readonly map = new Map<string, Set<AttendanceCodeblock>>();
+
+	public getAll(): Set<AttendanceCodeblock> {
+		return new Set([...this.map.values()].flatMap((set) => [...set]));
+	}
+
+	public set(file: string, codeblocks: Set<AttendanceCodeblock>) {
+		this.map.set(file, codeblocks);
+	}
+
+	public delete(file: string) {
+		this.map.delete(file);
+	}
+
+	public rename(oldPath: string, newPath: string) {
+		const codeblocks = this.map.get(oldPath);
+		if (codeblocks) {
+			this.map.set(newPath, codeblocks);
+			this.map.delete(oldPath);
+		}
+	}
+
+	public get(file: string): Set<AttendanceCodeblock> {
+		const result = this.map.get(file);
+		if (result) {
+			return new Set(result);
+		} else {
+			return CodeBlockCache.EMPTY_SET;
+		}
+	}
+}
+
 /** A generic index which indexes variables of the form key -> value[], allowing both forward and reverse lookups. */
 export class IndexMap {
 	/** Maps key -> values for that key. */
-	map: Map<string, Set<string>>;
+	private readonly map: Map<string, Set<string>> = new Map();
 	/** Cached inverse map; maps value -> keys that reference that value. */
-	invMap: Map<string, Set<string>>;
-
-	/** Create a new, empty index map. */
-	public constructor() {
-		this.map = new Map();
-		this.invMap = new Map();
-	}
+	private readonly invMap: Map<string, Set<string>> = new Map();
 
 	/** Returns all values for the given key. */
 	public get(key: string): Set<string> {

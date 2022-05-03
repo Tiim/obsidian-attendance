@@ -11,26 +11,22 @@ export class Attendance {
 	public readonly title: string;
 	public readonly query: AttendanceQuery;
 	public readonly attendances: Attendances;
-	/** Global cache */
-	readonly cache: SourceCache;
 
 	constructor(
 		date: string,
 		title: string,
 		query: AttendanceQuery,
-		attendances: AttendanceEntry[],
-		cache: SourceCache
+		attendances: AttendanceEntry[]
 	) {
 		this.date = date;
 		this.title = title;
 		this.query = query;
 		this.attendances = new Attendances(attendances);
-		this.cache = cache;
 	}
 
-	public getAttendances(): AttendanceEntry[] {
+	public getAttendances(cache: SourceCache): AttendanceEntry[] {
 		return this.attendances.getAttendancesAll(
-			Array.from(this.cache.getMatchingFiles(this.query))
+			Array.from(cache.getMatchingFiles(this.query))
 		);
 	}
 
@@ -38,6 +34,15 @@ export class Attendance {
 		return (
 			`date: ${this.date}\ntitle: ${this.title}\nquery: ${this.query}\n` +
 			this.attendances.toString()
+		);
+	}
+
+	public static equals(a: Attendance, b: Attendance): boolean {
+		return (
+			a.date === b.date &&
+			a.title === b.title &&
+			AttendanceQuery.equals(a.query, b.query) &&
+			Attendances.equals(a.attendances, b.attendances)
 		);
 	}
 }
@@ -80,6 +85,15 @@ class Attendances {
 	public toString(): string {
 		return this.attendanceList.map((a) => `* ${a.toString()}`).join("\n");
 	}
+
+	public static equals(a: Attendances, b: Attendances): boolean {
+		return (
+			a.attendanceList.length === b.attendanceList.length &&
+			a.attendanceList.every((a, i) =>
+				AttendanceEntry.equals(a, b.attendanceList[i])
+			)
+		);
+	}
 }
 
 /**
@@ -90,7 +104,7 @@ export class AttendanceCodeblock {
 	public readonly path: string;
 	public readonly error: Error;
 
-	constructor(sourceString: string, cache: SourceCache, path: string) {
+	constructor(sourceString: string, path: string) {
 		this.path = path;
 
 		try {
@@ -101,13 +115,7 @@ export class AttendanceCodeblock {
 					"The elements 'date:' and 'title:' and 'query:' are required."
 				);
 			}
-			this.attendance = new Attendance(
-				date,
-				title,
-				query,
-				attendances,
-				cache
-			);
+			this.attendance = new Attendance(date, title, query, attendances);
 		} catch (e) {
 			this.error = e;
 		}
@@ -148,29 +156,19 @@ export class AttendanceCodeblock {
 
 		const fileContent = await app.vault.read(tfile);
 
-		let idxStart, idxEnd;
-		let i = 0;
+		let idxStart = 0,
+			idxEnd = 0;
+
 		// find codeblock manually
-		while (i++ < 100) {
-			let idx = fileContent.indexOf("```" + CODE_BLOCK, idxStart + 1);
-			idxStart = idx >= 0 ? idx : fileContent.length - 1;
-			idx = fileContent.indexOf("```", idxStart + 3);
-			idxEnd = idx >= 0 ? idx : fileContent.length - 1;
-
-			const codeBlock = fileContent.substring(
-				idxStart + CODE_BLOCK.length + 3,
-				idxEnd
-			);
-			const p = this.parse(codeBlock);
-
-			if (idxStart >= fileContent.length - 1) {
-				break;
-			}
-			if (
-				p.date === this.attendance.date &&
-				p.title === this.attendance.title &&
-				AttendanceQuery.equals(p.query, this.attendance.query)
-			) {
+		while (idxStart < fileContent.length - 1) {
+			const cb: ParsedCodeblock =
+				await AttendanceCodeblock.parseNextCodeblockInFile(
+					tfile,
+					idxEnd
+				);
+			idxStart = cb.range.start;
+			idxEnd = cb.range.end;
+			if (Attendance.equals(cb.attendance.attendance, this.attendance)) {
 				break;
 			}
 		}
@@ -190,7 +188,48 @@ export class AttendanceCodeblock {
 			endContent;
 		await app.vault.modify(tfile, newContent);
 	}
+
+	public static async parseAllCodeblocksInFile(
+		file: TFile
+	): Promise<Set<AttendanceCodeblock>> {
+		const set = new Set<AttendanceCodeblock>();
+		let lastCB = await this.parseNextCodeblockInFile(file, 0);
+		while (lastCB.range.start < lastCB.fileSize - 1) {
+			set.add(lastCB.attendance);
+			lastCB = await this.parseNextCodeblockInFile(
+				file,
+				lastCB.range.end
+			);
+		}
+		return set;
+	}
+
+	private static async parseNextCodeblockInFile(
+		file: TFile,
+		start: number
+	): Promise<ParsedCodeblock> {
+		const fileContent = await app.vault.read(file);
+
+		let idx = fileContent.indexOf("```" + CODE_BLOCK, start + 1);
+		start = idx >= 0 ? idx : fileContent.length - 1;
+		idx = fileContent.indexOf("```", start + 3);
+		const end = idx >= 0 ? idx : fileContent.length - 1;
+
+		const code = fileContent.substring(start + CODE_BLOCK.length + 3, end);
+		const attendance = new AttendanceCodeblock(code, file.path);
+		return {
+			attendance,
+			range: { start, end },
+			fileSize: fileContent.length,
+		};
+	}
 }
+
+type ParsedCodeblock = {
+	attendance: AttendanceCodeblock;
+	range: { start: number; end: number };
+	fileSize: number;
+};
 
 /**
  * Represents a single attendee and their state
@@ -225,5 +264,9 @@ export class AttendanceEntry {
 
 	public toString(): string {
 		return `[[${this.link}]], "${this.state}", "${this.note}"`;
+	}
+
+	public static equals(a: AttendanceEntry, b: AttendanceEntry) {
+		return a.link === b.link && a.state === b.state && a.note === b.note;
 	}
 }

@@ -41,11 +41,7 @@ export class AttendanceRenderer {
 		element: HTMLElement,
 		context: MarkdownPostProcessorContext
 	) {
-		const attendance = new AttendanceCodeblock(
-			source,
-			this.cache,
-			context.sourcePath
-		);
+		const attendance = new AttendanceCodeblock(source, context.sourcePath);
 
 		const renderChild = new AttendanceRenderChild({
 			context,
@@ -53,6 +49,7 @@ export class AttendanceRenderer {
 			attendance,
 			app: this.app,
 			states: this.states,
+			cache: this.cache,
 		});
 
 		context.addChild(renderChild);
@@ -62,6 +59,7 @@ export class AttendanceRenderer {
 class AttendanceRenderChild extends MarkdownRenderChild {
 	private readonly context: MarkdownPostProcessorContext;
 	private readonly states: AttendanceStateSetting[];
+	private readonly cache: SourceCache;
 
 	constructor(args: {
 		context: MarkdownPostProcessorContext;
@@ -69,10 +67,12 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		attendance: AttendanceCodeblock;
 		app: App;
 		states: AttendanceStateSetting[];
+		cache: SourceCache;
 	}) {
 		super(args.container);
 		this.context = args.context;
 		this.states = args.states;
+		this.cache = args.cache;
 
 		this.render(args.attendance);
 		this.registerEvent(
@@ -94,7 +94,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		const ul = content.createEl("ul");
 		try {
 			a.attendance
-				.getAttendances()
+				.getAttendances(this.cache)
 				.forEach((at) => this.renderListItem(at, ul, a));
 		} catch (e) {
 			this.renderError("Execution", e.message);
