@@ -1,152 +1,122 @@
-export interface TagQuery {
-	type: "tag";
-	tag: string;
-}
+export abstract class Query {
+  abstract getType(): string;
+  abstract equals(other: Query): boolean;
+  abstract toString(): string;
 
-export interface FolderQuery {
-	type: "folder";
-	folder: string;
-}
-
-export interface BinaryQuery {
-	type: "binary";
-	operation: "and" | "or";
-	left: Query;
-	right: Query;
-}
-
-export type Query = TagQuery | FolderQuery;
-
-/** The query field of the attendance code block. */
-export class AttendanceQuery {
-	public readonly query: Query;
-
-	constructor(query: Query) {
-		this.query = query;
-	}
-
-	static parse(query: string): AttendanceQuery {
-		if (query.startsWith("#")) {
-			return new AttendanceQuery({ type: "tag", tag: query });
-		} else if (query.startsWith('"') && query.endsWith('"')) {
-			return new AttendanceQuery({
-				type: "folder",
-				folder: query.substring(1, query.length - 1),
-			});
-		} else {
-			throw new Error(
-				"Invalid query format: " +
-					query +
-					". Needs to be a tag or a folder."
-			);
-		}
-	}
-
-	static equals(a: AttendanceQuery, b: AttendanceQuery): boolean {
-		if (!a || !b) {
-			return false;
-		} else if (a.query.type !== b.query.type) {
-			return false;
-		} else if (a.query.type === "tag" && b.query.type === "tag") {
-			return a.query.tag === b.query.tag;
-		} else if (a.query.type === "folder" && b.query.type === "folder") {
-			return a.query.folder === b.query.folder;
-		}
-		return false;
-	}
-
-	toString(): string {
-		if (this.query.type === "tag") {
-			return this.query.tag;
-		} else if (this.query.type === "folder") {
-			return `"${this.query.folder}"`;
-		}
-	}
-}
-
-
-type TagToken = TagQuery
-type FolderToken = FolderQuery
-type ParensToken = {
-  type: "parens";
-  value: "left" | "right";
-}
-type KeyWord = "and" | "or";
-type KeywordToken = {
-  type: "keyword";
-  value: KeyWord;
-}
-
-type Token = TagToken | FolderToken | ParensToken | KeywordToken;
-
-class QueryParser {
-  public static readonly keywords: KeyWord[] = ["and", "or"];
-  private readonly query: string;
-  private readonly tokens: Token[] = [];
-  private pos = 0;
-
-  constructor(query: string) {
-    this.query = query.trim();
-  }
-
-  private tokenize() {
-    while(true) {
-      if (this.pos >= this.query.length) {
-        return;
-      } else if (this.query[this.pos] === " ") {
-        this.pos++;
-      } else if (this.query[this.pos] === "#") {
-        this.tokens.push(this.parseTag());
-      } else if (this.query[this.pos] === "\"") {
-        this.tokens.push(this.parseFolder());
-      } else if (this.query[this.pos] === "(") {
-        this.tokens.push({ type: "parens", value: "left" });
-      } else if (this.query[this.pos] === ")") {
-        this.tokens.push({ type: "parens", value: "right" });
-      } else {
-        this.tokens.push(this.parseKeyword());
-      }
-    }  
-  }
-
-  parseKeyword(): KeywordToken {
-    const oldPos = this.pos;
-    let c = this.query[this.pos];
-    while (c.match(/[a-zA-Z]/)) {
-      this.pos++;
+  static equals(a: Query, b: Query): boolean {
+    if ((a == null || b == null) && a !== b) {
+      return false;
     }
-    const token = this.query.substring(oldPos, this.pos-1) as KeyWord;
-    if (QueryParser.keywords.includes(token)) {
-      throw new Error("Invalid keyword " + token + " at position " + oldPos);
+    if (a.getType() !== b.getType()) {
+      return false;
     }
-    return { type: "keyword", value: token };
-  }
-
-  parseFolder(): FolderToken {
-    if (this.query[this.pos] !== "\"") {
-      throw new Error("Expected \" at position " + this.pos + " got " + this.query[this.pos]);
-    }
-    const oldPos = this.pos;
-    this.pos = this.query.indexOf("\"", this.pos);
-    if (this.pos < 0) {
-      throw new Error("Unterminated folder token at position " + oldPos);
-    }
-    this.pos += 1;
-    const token = this.query.substring(oldPos + 1, this.pos-1);
-    return { type: "folder", folder: token };
-  }
-
-  parseTag(): TagToken {
-    if (this.query[this.pos] !== "#") {
-      throw new Error("Expected tag at position " + this.pos + " got " + this.query[this.pos]);
-    }
-    const oldPos = this.pos;
-    this.pos = this.query.indexOf(" ", this.pos);
-    if (this.pos < 0) {
-      this.pos = this.query.length;
-    }
-    const token = this.query.substring(oldPos, this.pos-1);  
-    return { type: "tag", tag: token };
+    return a.equals(b);
   }
 }
 
+export class TagQuery extends Query {
+  public readonly tag: string;
+
+  constructor(tag: string) {
+    super();
+    this.tag = tag;
+  }
+
+  getType(): string {
+    return "tag";
+  }
+
+  equals(other: Query): boolean {
+    if (other.getType() !== "tag") {
+      return false;
+    }
+    const otherTagQuery = other as TagQuery;
+    return this.tag === otherTagQuery.tag;
+  }
+
+  toString(): string {
+    return this.tag;
+  }
+}
+
+export class FolderQuery extends Query {
+  public readonly folder: string;
+
+  constructor(folder: string) {
+    super();
+    this.folder = folder;
+  }
+
+  getType(): string {
+    return "folder";
+  }
+
+  equals(other: Query): boolean {
+    if (other.getType() !== "folder") {
+      return false;
+    }
+    const otherFolderQuery = other as FolderQuery;
+    return this.folder === otherFolderQuery.folder;
+  }
+
+  toString(): string {
+    return `"${this.folder}"`;
+  }
+}
+
+export class LinkQuery extends Query {
+
+  constructor(public readonly link: string) {
+    super();
+  }
+
+  getType(): string {
+    return "link";
+  }
+
+  equals(other: Query): boolean {
+    if (other.getType() !== "link") {
+      return false;
+    }
+    const otherLinkQuery = other as LinkQuery;
+    return this.link === otherLinkQuery.link;
+  }
+
+  toString(): string {
+    return `[[${this.link}]]`;
+  }
+}
+
+
+export class BinaryQuery extends Query {
+  public readonly operation: "and" | "or";
+  public readonly left: Query;
+  public readonly right: Query;
+
+  constructor(operation: "and" | "or", left: Query, right: Query) {
+    super();
+    this.operation = operation;
+    this.left = left;
+    this.right = right;
+  }
+
+  getType(): string {
+    return "binary";
+  }
+
+  equals(other: Query): boolean {
+    if (other.getType() !== "binary") {
+      return false;
+    }
+    const otherBinaryQuery = other as BinaryQuery;
+    return (
+      this.operation === otherBinaryQuery.operation &&
+      this.left.equals(otherBinaryQuery.left) &&
+      this.right.equals(otherBinaryQuery.right)
+    );
+  }
+
+  toString(): string {
+    return `(${this.left.toString()} ${this.operation} ${this.right.toString()})`;
+  }
+}

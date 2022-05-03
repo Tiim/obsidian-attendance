@@ -1,6 +1,7 @@
 import { TFile } from "obsidian";
 import { CODE_BLOCK } from "./AttendanceRenderer";
-import { AttendanceQuery } from "./Query";
+import { QueryParser } from "./parse/query";
+import { Query } from "./Query";
 import { SourceCache } from "./SourceCache";
 
 /**
@@ -9,13 +10,13 @@ import { SourceCache } from "./SourceCache";
 export class Attendance {
 	public readonly date: string;
 	public readonly title: string;
-	public readonly query: AttendanceQuery;
+	public readonly query: Query;
 	public readonly attendances: Attendances;
 
 	constructor(
 		date: string,
 		title: string,
-		query: AttendanceQuery,
+		query: Query,
 		attendances: AttendanceEntry[]
 	) {
 		this.date = date;
@@ -41,7 +42,7 @@ export class Attendance {
 		return (
 			a.date === b.date &&
 			a.title === b.title &&
-			AttendanceQuery.equals(a.query, b.query) &&
+			Query.equals(a.query, b.query) &&
 			Attendances.equals(a.attendances, b.attendances)
 		);
 	}
@@ -124,7 +125,7 @@ export class AttendanceCodeblock {
 	private parse(sourceString: string) {
 		let date: string;
 		let title: string;
-		let query: AttendanceQuery;
+		let query: Query;
 		const attendances: AttendanceEntry[] = [];
 		sourceString.split("\n").forEach((line) => {
 			line = line.trim();
@@ -133,7 +134,8 @@ export class AttendanceCodeblock {
 			} else if (line.startsWith("title:")) {
 				title = line.substring(6).trim();
 			} else if (line.startsWith("query:")) {
-				query = AttendanceQuery.parse(line.substring(6).trim());
+				const qp = new QueryParser(line.substring(6).trim());
+				query = qp.parseQuery();
 			} else if (line.startsWith("*")) {
 				attendances.push(
 					AttendanceEntry.parse(line.substring(1).trim())
