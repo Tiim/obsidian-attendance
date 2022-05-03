@@ -32,7 +32,6 @@ export class QueryParser {
         return {consumed: i + 1, q: currentQuery};
 			}
 			const token = tokens[pos + i];
-      console.log("parseRecursive", token);
 			if (token instanceof ParensToken) {
 				if (token.isStart()) {
 					const {consumed, q: query} = this.parseRecursive(tokens, pos + 1);
@@ -102,7 +101,7 @@ export class QueryParser {
 		pos: number
 	): ParseTokenOutput<KeywordToken> {
 		const oldPos = pos;
-		while (QueryParser.LETTERS_REGEX.test(query[pos])) {
+		while (QueryParser.LETTERS_REGEX.test(query[pos]) && pos < query.length) {
 			pos++;
 		}
 		const token = query.substring(oldPos, pos) as KeyWord;

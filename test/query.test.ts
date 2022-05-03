@@ -138,17 +138,22 @@ test("Full parsing flat", () => {
 });
 
 test("AST with and without parens", () => {
-  const query1 = `"test-folder" and #tag or "test-folder2" and #tag2`;
+	const query1 = `"test-folder" and #tag or "test-folder2" and #tag2`;
 	const parser1 = new QueryParser(query1);
 	const tokens1 = parser1.tokenize(query1);
 	const ast1 = parser1.parse(tokens1);
 
-
-  const query2 = `"test-folder" and (#tag or ("test-folder2" and #tag2))`;
-  const parser2 = new QueryParser(query2);
-  const tokens2 = parser2.tokenize(query2);
-  const ast2 = parser2.parse(tokens2);
-
+	const query2 = `"test-folder" and (#tag or ("test-folder2" and #tag2))`;
+	const parser2 = new QueryParser(query2);
+	const tokens2 = parser2.tokenize(query2);
+	const ast2 = parser2.parse(tokens2);
 
 	expect(ast1).toEqual(ast2);
-})
+});
+
+test("invalid query", () => {
+	debugger;
+	const query1 = `person`;
+	const parser1 = new QueryParser(query1);
+	expect(() => parser1.tokenize(query1)).toThrow();
+});

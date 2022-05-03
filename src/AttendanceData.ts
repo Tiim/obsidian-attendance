@@ -38,12 +38,16 @@ export class Attendance {
 		);
 	}
 
-	public static equals(a: Attendance, b: Attendance): boolean {
+	public static equalsIgnoreAttendance(a: Attendance, b: Attendance): boolean {
+		if ((a == null || b == null)  && a !== b) {
+			return false;
+		} else if (a === b) {
+			return true
+		}
 		return (
 			a.date === b.date &&
 			a.title === b.title &&
-			Query.equals(a.query, b.query) &&
-			Attendances.equals(a.attendances, b.attendances)
+			Query.equals(a.query, b.query)
 		);
 	}
 }
@@ -170,10 +174,13 @@ export class AttendanceCodeblock {
 				);
 			idxStart = cb.range.start;
 			idxEnd = cb.range.end;
-			if (Attendance.equals(cb.attendance.attendance, this.attendance)) {
+					
+			if (Attendance.equalsIgnoreAttendance(cb.attendance.attendance, this.attendance)) {
 				break;
 			}
 		}
+
+		
 
 		const content = this.attendance.toString();
 		const startContent = fileContent.substring(0, idxStart);
@@ -215,7 +222,7 @@ export class AttendanceCodeblock {
 		let idx = fileContent.indexOf("```" + CODE_BLOCK, start + 1);
 		start = idx >= 0 ? idx : fileContent.length - 1;
 		idx = fileContent.indexOf("```", start + 3);
-		const end = idx >= 0 ? idx : fileContent.length - 1;
+		const end = idx >= 0 ? idx+3 : fileContent.length - 1;
 
 		const code = fileContent.substring(start + CODE_BLOCK.length + 3, end);
 		const attendance = new AttendanceCodeblock(code, file.path);

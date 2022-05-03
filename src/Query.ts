@@ -35,7 +35,7 @@ export class TagQuery extends Query {
   }
 
   toString(): string {
-    return this.tag;
+    return "#" +this.tag;
   }
 }
 

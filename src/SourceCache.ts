@@ -98,7 +98,9 @@ export class SourceCache extends Component {
 				throw new Error("Folder " + source.folder + " does not exist");
 			}
 		} else {
-			throw new Error("Query type not yet supported");
+			throw new Error(
+				"Query type '" + source.getType() + "' not yet supported"
+			);
 		}
 	}
 }
