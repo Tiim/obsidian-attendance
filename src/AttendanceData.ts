@@ -1,5 +1,5 @@
-import { TFile } from "obsidian";
-import { CODE_BLOCK } from "./AttendanceRenderer";
+import { TFile, Vault } from "obsidian";
+import { CODE_BLOCK } from "./globals";
 import { QueryParser } from "./parse/query";
 import { Query } from "./Query";
 import { SourceCache } from "./SourceCache";
@@ -31,6 +31,9 @@ export class Attendance {
 		);
 	}
 
+	/**
+	 * Contains a trailing newline
+	 */
 	public toString(): string {
 		return (
 			`date: ${this.date}\ntitle: ${this.title}\nquery: ${this.query}\n` +
@@ -88,7 +91,7 @@ class Attendances {
 	}
 
 	public toString(): string {
-		return this.attendanceList.map((a) => `* ${a.toString()}`).join("\n");
+		return this.attendanceList.map((a) => `* ${a.toString()}\n`).join("");
 	}
 
 	public static equals(a: Attendances, b: Attendances): boolean {
@@ -108,9 +111,11 @@ export class AttendanceCodeblock {
 	public attendance: Attendance;
 	public readonly path: string;
 	public readonly error: Error;
+	private readonly vault: Vault;
 
-	constructor(sourceString: string, path: string) {
+	constructor(sourceString: string, path: string, vault: Vault) {
 		this.path = path;
+		this.vault = vault;
 
 		try {
 			const { date, title, query, attendances } =
@@ -155,12 +160,12 @@ export class AttendanceCodeblock {
 	}
 
 	public async write() {
-		const tfile = app.vault.getAbstractFileByPath(this.path);
+		const tfile = this.vault.getAbstractFileByPath(this.path);
 		if (!(tfile instanceof TFile)) {
 			throw new Error(`${this.path} is not an existing file.`);
 		}
 
-		const fileContent = await app.vault.read(tfile);
+		const fileContent = await this.vault.read(tfile);
 
 		let idxStart = 0,
 			idxEnd = 0;
@@ -170,7 +175,8 @@ export class AttendanceCodeblock {
 			const cb: ParsedCodeblock =
 				await AttendanceCodeblock.parseNextCodeblockInFile(
 					tfile,
-					idxEnd
+					idxEnd,
+					this.vault
 				);
 			idxStart = cb.range.start;
 			idxEnd = cb.range.end;
@@ -179,35 +185,37 @@ export class AttendanceCodeblock {
 				break;
 			}
 		}
-
-		
+	
 
 		const content = this.attendance.toString();
 		const startContent = fileContent.substring(0, idxStart);
-		const endContent = fileContent.substring(idxEnd + 1);
-		const endBrackets = endContent.startsWith("```") ? "" : "```";
+		const endContent = fileContent.substring(idxEnd);
+		const startBrackets = idxStart >= fileContent.length ? "\n```" : "```";
+		const endBrackets = "```"
+
 		const newContent =
 			startContent +
-			"```" +
+			startBrackets +
 			CODE_BLOCK +
 			"\n" +
 			content +
-			"\n" +
 			endBrackets +
 			endContent;
-		await app.vault.modify(tfile, newContent);
+		await this.vault.modify(tfile, newContent);
 	}
 
 	public static async parseAllCodeblocksInFile(
-		file: TFile
+		file: TFile,
+		vault: Vault
 	): Promise<Set<AttendanceCodeblock>> {
 		const set = new Set<AttendanceCodeblock>();
-		let lastCB = await this.parseNextCodeblockInFile(file, 0);
+		let lastCB = await this.parseNextCodeblockInFile(file, 0, vault);
 		while (lastCB.range.start < lastCB.fileSize - 1) {
 			set.add(lastCB.attendance);
 			lastCB = await this.parseNextCodeblockInFile(
 				file,
-				lastCB.range.end
+				lastCB.range.end,
+				vault
 			);
 		}
 		return set;
@@ -215,9 +223,10 @@ export class AttendanceCodeblock {
 
 	private static async parseNextCodeblockInFile(
 		file: TFile,
-		start: number
+		start: number,
+		vault: Vault
 	): Promise<ParsedCodeblock> {
-		const fileContent = await app.vault.read(file);
+		const fileContent = await vault.read(file);
 
 		let idx = fileContent.indexOf("```" + CODE_BLOCK, start + 1);
 		start = idx >= 0 ? idx : fileContent.length - 1;
@@ -225,7 +234,7 @@ export class AttendanceCodeblock {
 		const end = idx >= 0 ? idx+3 : fileContent.length - 1;
 
 		const code = fileContent.substring(start + CODE_BLOCK.length + 3, end);
-		const attendance = new AttendanceCodeblock(code, file.path);
+		const attendance = new AttendanceCodeblock(code, file.path, vault);
 		return {
 			attendance,
 			range: { start, end },

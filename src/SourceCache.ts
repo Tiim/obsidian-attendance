@@ -73,7 +73,7 @@ export class SourceCache extends Component {
 		this.tags.set(file.path, tags);
 
 		// use promises, this is not an async function
-		AttendanceCodeblock.parseAllCodeblocksInFile(file).then((blocks) => {
+		AttendanceCodeblock.parseAllCodeblocksInFile(file, this.app.vault).then((blocks) => {
 			this.codeblocks.set(file.path, blocks);
 			this.touch("reload");
 		});

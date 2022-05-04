@@ -5,12 +5,11 @@ import {
 	MarkdownRenderChild,
 	MarkdownRenderer,
 } from "obsidian";
+import {CODE_BLOCK} from "./globals";
 import AttendancePlugin, { AttendanceStateSetting } from "./main";
 import { AttendanceEntry, AttendanceCodeblock } from "./AttendanceData";
 import { EVENT_CACHE_UPDATE, SourceCache } from "./SourceCache";
 import { Link } from "./util/link";
-
-export const CODE_BLOCK = "attendance";
 
 export class AttendanceRenderer {
 	private readonly app: App;
@@ -41,7 +40,7 @@ export class AttendanceRenderer {
 		element: HTMLElement,
 		context: MarkdownPostProcessorContext
 	) {
-		const attendance = new AttendanceCodeblock(source, context.sourcePath);
+		const attendance = new AttendanceCodeblock(source, context.sourcePath, this.app.vault);
 
 		const renderChild = new AttendanceRenderChild({
 			context,
