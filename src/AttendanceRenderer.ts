@@ -8,7 +8,7 @@ import {
 import {CODE_BLOCK} from "./globals";
 import AttendancePlugin, { AttendanceStateSetting } from "./main";
 import { AttendanceEntry, AttendanceCodeblock } from "./AttendanceData";
-import { EVENT_CACHE_UPDATE, SourceCache } from "./SourceCache";
+import { EVENT_CACHE_UPDATE, SourceCache } from "./cache/cache";
 import { Link } from "./util/link";
 
 export class AttendanceRenderer {

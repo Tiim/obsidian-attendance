@@ -153,6 +153,11 @@ export class QueryParser {
     }
     pos += 2;
     const token = query.substring(oldPos + 2, pos - 2);
+
+		if (token.includes("|")) {
+			throw new Error("Link aliases not supported.");
+		}
+
     return { token: new SrcToken("link",token), newPos: pos };
   }
 }
