@@ -2,17 +2,9 @@
 /** @type {import('@jest/types').Config.InitialOptions} */
 const config = {
 	verbose: true,
-	transform: {
-		"^.+\\.tsx?$": [
-			"esbuild-jest",
-			{
-				sourcemap: true,
-				loaders: {
-					".spec.ts": "tsx",
-				},
-			},
-		],
-	},
+	preset: "ts-jest",
+	testEnvironment: "jsdom",
+	moduleDirectories: ["node_modules", "src"],
 };
 
 module.exports = config;
