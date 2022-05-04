@@ -9,7 +9,7 @@ import {
 import AttendancePlugin from "./main";
 import { expandTag } from "./util/expand-tag";
 import { AttendanceCodeblock } from "./AttendanceData";
-import { FolderQuery, Query, TagQuery } from "./Query";
+import { BinaryQuery, FolderQuery, Query, TagQuery } from "./Query";
 import { CodeBlockCache } from "./cache/codeblock-cache";
 import { BidirectionalMap } from "./cache/bidir-map";
 import { FolderCache } from "./cache/folder-cache";
@@ -95,6 +95,19 @@ export class SourceCache extends Component {
 			} else {
 				throw new Error("Folder " + source.folder + " does not exist");
 			}
+		} else if(source instanceof BinaryQuery) {
+			const left = this.getMatchingFiles(source.left);
+			const right = this.getMatchingFiles(source.right);
+			
+
+			if (source.operation === "and") {
+				//intersection of sets
+				return new Set([...left].filter((x) => right.has(x)));
+			} else if (source.operation === "or") {
+				//union of sets
+				return new Set([...left, ...right]);
+			}
+			throw new Error("Unknown operation " + source.operation);
 		} else {
 			throw new Error(
 				"Query type '" + source.getType() + "' not yet supported"
