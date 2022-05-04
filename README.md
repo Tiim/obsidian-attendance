@@ -13,7 +13,7 @@ If you like this plugin, consider buying me a coffee.
 
 Create a code block with the `attendance` type:
 
-````
+````markdown
 ```attendance
 date: 2022-03-26
 title: History Class
@@ -37,15 +37,59 @@ The title field lets you specify the title of the event. This field is currently
 
 ### The query field
 
-The query field lets you specify what notes are considered possible attendees of the event. The list will include all notes that match the query field. Currently the only query type supported are tag queries.
+The query field lets you specify what notes are considered possible attendees of the event. The list will include all notes that match the query field. 
 
-In the future more query types will be implemented to match the [dataview sources](https://blacksmithgu.github.io/obsidian-dataview/query/sources/).
+The following query fields are currently supported:
+
+#### Tags
+
+Example:
+```
+query: #person/class-a
+```
+
+This query will match all notes with the `#person/class-a` tag.
+
+#### Folders
+
+Example:
+```
+query: "people"
+```
+
+This query will match all notes in the `people` folder.
+
+#### Links
+
+Example:
+```
+query: [[PersonMOC]]
+```
+
+This query will match all notes that are linked from the `[[PersonMOC]]` note or that link to it.
+
+#### Combining queries (and, or)
+
+Example:
+```
+query: #class-a and [[Students]]
+```
+This will only match notes that have the tag `#class-a` and either link to the `[[Students]]` note or are linked from it.
+
+##### Parentheses
+
+When combining more than two queries it is recommended to use parentheses to keep the query readable. If none are explicitly set, the plugin will automatically put the parentheses as follows:
+
+```
+query: (#tag-a and (#tag-b and (#tag-c or #tag-d)))
+```
+
 
 ### Saving the attendance state
 
 When you click on one of the three buttons ("present", "absent", "excused"), the codeblock behind the list will be modified to save the attendance state that you selected. The following shows an example of a codeblock with one present and one excused attendee:
 
-````
+````markdown
 ```attendance
 date: 2022-03-26
 title: History Class
@@ -109,6 +153,6 @@ See https://github.com/obsidianmd/obsidian-api
 
 ### Code from other plugins
 
-This plugin uses snippets from the following plugins:
+This plugin is inspired and uses code from the following plugins:
 
 * Obsidian Dataview
