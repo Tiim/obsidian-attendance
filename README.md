@@ -25,6 +25,8 @@ The `date`, `title` and `query` fields are all required.
 
 ![Attendance List](misc/images/screenshot-1.png)
 
+> ⚠ If you create multiple attendance lists in the same note, make absolutely sure they have either different "date" ore "title" attributes. Otherwise when you want to update the second attendance list, the plugin will overwrite the first list.
+
 ### The date field
 *currently unused*
 
