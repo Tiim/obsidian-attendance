@@ -152,7 +152,6 @@ test("AST with and without parens", () => {
 });
 
 test("invalid query", () => {
-	debugger;
 	const query1 = `person`;
 	const parser1 = new QueryParser(query1);
 	expect(() => parser1.tokenize(query1)).toThrow();

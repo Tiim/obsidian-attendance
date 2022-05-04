@@ -27,7 +27,7 @@ export class QueryParser {
 
 	private parseRecursive(tokens: Token[], pos: number): {consumed: number, q:Query} {
     let currentQuery: Query;
-		for (let i = 0; true; i++) {
+		for (let i = 0;; i++) {
       if (pos + i >= tokens.length) {
         return {consumed: i + 1, q: currentQuery};
 			}
@@ -60,21 +60,19 @@ export class QueryParser {
 	public tokenize(query: string): Token[] {
 		const tokens: Token[] = [];
 		let pos = 0;
-		while (true) {
-			if (pos >= query.length) {
-				return;
-			} else if (query[pos] === " " || query[pos] === "\t") {
+		while (pos < query.length) {
+			if (query[pos] === " " || query[pos] === "\t") {
 				pos++;
 			} else if (query[pos] === "#") {
-				let { token, newPos } = this.parseTag(query, pos);
+				const { token, newPos } = this.parseTag(query, pos);
 				pos = newPos;
 				tokens.push(token);
 			} else if (query[pos] === '"') {
-				let { token, newPos } = this.parseFolder(query, pos);
+				const { token, newPos } = this.parseFolder(query, pos);
 				pos = newPos;
 				tokens.push(token);
       } else if (query[pos] === "[") {
-        let { token, newPos } = this.parseLink(query, pos);
+        const { token, newPos } = this.parseLink(query, pos);
         pos = newPos;
         tokens.push(token);
 			} else if (query[pos] === "(") {
@@ -84,12 +82,9 @@ export class QueryParser {
 				pos++;
 				tokens.push(new ParensToken(false));
 			} else {
-				let { token, newPos } = this.parseKeyword(query, pos);
+				const { token, newPos } = this.parseKeyword(query, pos);
 				pos = newPos;
 				tokens.push(token);
-			}
-			if (pos >= query.length) {
-				break;
 			}
 		}
 		return tokens;
@@ -140,7 +135,7 @@ export class QueryParser {
 		}
 		const oldPos = pos;
 		const len =
-			query.substring(pos + 1).match(/[a-zA-Z0-9_\-\/]+/)[0].length + 1;
+			query.substring(pos + 1).match(/[a-zA-Z0-9_\-/]+/)[0].length + 1;
 		const token = query.substring(oldPos + 1, oldPos + len);
 		return { token: new SrcToken("tag",token), newPos: oldPos + len };
 	}

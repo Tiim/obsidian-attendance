@@ -5,8 +5,6 @@ import {
 	MetadataCache,
 	TAbstractFile,
 	TFile,
-	TFolder,
-	Vault,
 } from "obsidian";
 import AttendancePlugin from "./main";
 import { expandTag } from "./util/expand-tag";

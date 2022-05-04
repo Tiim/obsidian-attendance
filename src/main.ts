@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, SettingTab } from "obsidian";
+import { Plugin } from "obsidian";
 import { AttendanceRenderer } from "./AttendanceRenderer";
 import { SourceCache } from "./SourceCache";
 import { AttendanceSettingsTab } from "./SettingsTab";

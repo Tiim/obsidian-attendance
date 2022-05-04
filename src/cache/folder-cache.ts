@@ -1,4 +1,4 @@
-import { Component, TFolder, Vault } from "obsidian";
+import { TFolder, Vault } from "obsidian";
 
 /** Indexes files by their full prefix - essentially a simple prefix tree. */
 export class FolderCache {
@@ -26,7 +26,7 @@ export class FolderCache {
 		prefix: string,
 		filter?: (path: string) => boolean
 	): Set<string> {
-		let folder = this.vault.getAbstractFileByPath(prefix || "/");
+		const folder = this.vault.getAbstractFileByPath(prefix || "/");
 		return new Set(
 			folder instanceof TFolder ? this.walk(folder, filter) : []
 		);
