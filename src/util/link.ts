@@ -4,8 +4,9 @@ export class Link {
 	public readonly path: string;
 	public readonly display?: string;
 
-	constructor(path: string | TFile) {
-		if (String.isString(path)) {
+	constructor(path: string | TFile, display?: string) {
+		this.display = display;
+		if (typeof path === "string") {
 			this.path = path;
 		} else {
 			this.path = path.path;

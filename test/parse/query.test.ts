@@ -1,10 +1,10 @@
-import { BinaryQuery, FolderQuery, TagQuery } from "../src/Query";
+import { BinaryQuery, FolderQuery, TagQuery } from "../../src/Query";
 import {
 	QueryParser,
 	ParensToken,
 	KeywordToken,
 	SrcToken,
-} from "../src/parse/query";
+} from "../../src/parse/query";
 
 test("parsing tag", () => {
 	const parser = new QueryParser("#tag");

@@ -91,7 +91,7 @@ class Attendances {
 	}
 
 	public toString(): string {
-		return this.attendanceList.map((a) => `* ${a.toString()}\n`).join("");
+		return this.attendanceList.map((a) => `- ${a.toString()}\n`).join("");
 	}
 
 	public static equals(a: Attendances, b: Attendances): boolean {
@@ -145,7 +145,7 @@ export class AttendanceCodeblock {
 			} else if (line.startsWith("query:")) {
 				const qp = new QueryParser(line.substring(6).trim());
 				query = qp.parseQuery();
-			} else if (line.startsWith("*")) {
+			} else if (line.startsWith("*") || line.startsWith("-")) {
 				attendances.push(
 					AttendanceEntry.parse(line.substring(1).trim())
 				);
