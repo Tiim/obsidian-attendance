@@ -81,20 +81,20 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		);
 	}
 
-	private render(a: AttendanceCodeblock) {
-		this.containerEl.innerHTML = "";
+	private render(attendanceCodeblock: AttendanceCodeblock) {
+		this.containerEl.empty();
 		const content = this.containerEl.createDiv({
 			cls: "attendance-content",
 		});
-		if (a.error) {
-			this.renderError("Parsing", a.error.message);
+		if (attendanceCodeblock.error) {
+			this.renderError("Parsing", attendanceCodeblock.error.message);
 			return;
 		}
 		const ul = content.createEl("ul");
 		try {
-			a.attendance
+			attendanceCodeblock.attendance
 				.getAttendances(this.cache)
-				.forEach((at) => this.renderListItem(at, ul, a));
+				.forEach((at) => this.renderListItem(at, ul, attendanceCodeblock));
 		} catch (e) {
 			this.renderError("Execution", e.message);
 		}
@@ -109,17 +109,17 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 	}
 
 	private renderListItem(
-		a: AttendanceEntry,
+		attendanceEntry: AttendanceEntry,
 		ul: HTMLElement,
 		source: AttendanceCodeblock
 	) {
-		const itemState = a.state;
+		const itemState = attendanceEntry.state;
 
 		const li = ul.createEl("li", {
 			cls: itemState === "" ? "inactive" : itemState,
 		});
 		renderCompactMarkdown(
-			new Link(a.link).markdown(),
+			new Link(attendanceEntry.link).markdown(),
 			li,
 			this.context.sourcePath,
 			this
@@ -139,7 +139,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 					style: `--bg-color: ${state.color}`,
 				},
 			});
-			btn.onclick = () => source.setState(a.link, state.name, "");
+			btn.onclick = () => source.setState(attendanceEntry.link, state.name, "");
 		});
 	}
 }
@@ -150,19 +150,11 @@ export async function renderCompactMarkdown(
 	sourcePath: string,
 	component: Component
 ) {
-	const subContainer = container.createSpan();
+	const subContainer = container.createSpan({cls: "attendance-compact"});
 	await MarkdownRenderer.renderMarkdown(
 		markdown,
 		subContainer,
 		sourcePath,
 		component
 	);
-
-	const paragraph = subContainer.querySelector("p");
-	if (subContainer.children.length == 1 && paragraph) {
-		while (paragraph.firstChild) {
-			subContainer.appendChild(paragraph.firstChild);
-		}
-		subContainer.removeChild(paragraph);
-	}
 }

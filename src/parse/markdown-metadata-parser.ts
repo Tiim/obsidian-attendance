@@ -19,8 +19,9 @@ export class MarkdownMetadataParser {
 		const links = new Set<string>();
 		// files that are not in the cache yet, will be handled by the "resolve" event
 		if (fc) {
-			getAllTags(fc)
-				.flatMap(expandTag)
+			const allTags = getAllTags(fc) || [];
+			
+			allTags.flatMap(expandTag)
 				.forEach((tag) => tags.add(tag));
 
       const allLinks = [...fc.links || [], ...fc.embeds||[]];
