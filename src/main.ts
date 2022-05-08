@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { AttendanceRenderer } from "./AttendanceRenderer";
+import { AttendanceRenderer } from "./ui/AttendanceRenderer";
 import { SourceCache } from "./cache/cache";
 import { AttendanceSettingsTab } from "./SettingsTab";
 
