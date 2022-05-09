@@ -4,6 +4,7 @@ import { SourceCache } from "./cache/cache";
 import { AttendanceSettingsTab } from "./SettingsTab";
 import { AttendanceOverviewView } from "./ui/view/AttendanceOverviewView";
 import { VIEW_TYPE_ATTENDANCE } from "./globals";
+import "./styles.css";
 
 declare module "obsidian" {
 	interface Workspace {
