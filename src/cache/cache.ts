@@ -1,5 +1,5 @@
 import { App, Component, MetadataCache, TAbstractFile, TFile } from "obsidian";
-import AttendancePlugin from "../main";
+import type AttendancePlugin from "../main";
 import { BinaryQuery, FolderQuery, LinkQuery, Query, TagQuery } from "../Query";
 import { CodeBlockCache } from "./codeblock-cache";
 import { BidirectionalMap } from "./bidirectional-map";

@@ -1,4 +1,4 @@
-import { AttendanceCodeblock } from "../AttendanceData";
+import type { AttendanceCodeblock } from "../AttendanceData";
 
 export class CodeBlockCache {
 	private static readonly EMPTY_SET: Readonly<Set<AttendanceCodeblock>> =

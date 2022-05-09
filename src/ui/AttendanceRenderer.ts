@@ -1,12 +1,13 @@
+import type {MarkdownPostProcessorContext} from "obsidian"
 import {
 	App,
 	Component,
-	MarkdownPostProcessorContext,
 	MarkdownRenderChild,
 	MarkdownRenderer,
 } from "obsidian";
 import {CODE_BLOCK} from "../globals";
-import AttendancePlugin, { AttendanceStateSetting } from "../main";
+import type AttendancePlugin from "../main";
+import type { AttendanceStateSetting } from "../main";
 import { AttendanceEntry, AttendanceCodeblock } from "../AttendanceData";
 import { EVENT_CACHE_UPDATE, SourceCache } from "../cache/cache";
 import { Link } from "../util/link";
