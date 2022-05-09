@@ -3,18 +3,19 @@ import { CODE_BLOCK } from "./globals";
 import { QueryParser } from "./parse/query";
 import { Query } from "./Query";
 import type { SourceCache } from "./cache/cache";
+import moment from "moment";
 
 /**
  * Data structure holding attendance data for a single codeblock.
  */
 export class Attendance {
-	public readonly date: string;
+	public readonly date: moment.Moment;
 	public readonly title: string;
 	public readonly query: Query;
 	public readonly attendances: Attendances;
 
 	constructor(
-		date: string,
+		date: moment.Moment,
 		title: string,
 		query: Query,
 		attendances: AttendanceEntry[]
@@ -24,7 +25,6 @@ export class Attendance {
 		this.query = query;
 		this.attendances = new Attendances(attendances);
 	}
-
 	public getAttendances(cache: SourceCache): AttendanceEntry[] {
 		return this.attendances.getAttendancesAll(
 			Array.from(cache.getMatchingFiles(this.query))
@@ -41,11 +41,14 @@ export class Attendance {
 		);
 	}
 
-	public static equalsIgnoreAttendance(a: Attendance, b: Attendance): boolean {
-		if ((a == null || b == null)  && a !== b) {
+	public static equalsIgnoreAttendance(
+		a: Attendance,
+		b: Attendance
+	): boolean {
+		if ((a == null || b == null) && a !== b) {
 			return false;
 		} else if (a === b) {
-			return true
+			return true;
 		}
 		return (
 			a.date === b.date &&
@@ -125,6 +128,9 @@ export class AttendanceCodeblock {
 					"The elements 'date:' and 'title:' and 'query:' are required."
 				);
 			}
+			if (!date.isValid()) {
+				throw new Error("The date is not valid.");
+			}
 			this.attendance = new Attendance(date, title, query, attendances);
 		} catch (e) {
 			this.error = e;
@@ -132,14 +138,14 @@ export class AttendanceCodeblock {
 	}
 
 	private parse(sourceString: string) {
-		let date: string;
+		let date: moment.Moment;
 		let title: string;
 		let query: Query;
 		const attendances: AttendanceEntry[] = [];
 		sourceString.split("\n").forEach((line) => {
 			line = line.trim();
 			if (line.startsWith("date:")) {
-				date = line.substring(5).trim();
+				date = moment(line.substring(5).trim());
 			} else if (line.startsWith("title:")) {
 				title = line.substring(6).trim();
 			} else if (line.startsWith("query:")) {
@@ -180,18 +186,22 @@ export class AttendanceCodeblock {
 				);
 			idxStart = cb.range.start;
 			idxEnd = cb.range.end;
-					
-			if (Attendance.equalsIgnoreAttendance(cb.attendance.attendance, this.attendance)) {
+
+			if (
+				Attendance.equalsIgnoreAttendance(
+					cb.attendance.attendance,
+					this.attendance
+				)
+			) {
 				break;
 			}
 		}
-	
 
 		const content = this.attendance.toString();
 		const startContent = fileContent.substring(0, idxStart);
 		const endContent = fileContent.substring(idxEnd);
 		const startBrackets = idxStart >= fileContent.length ? "\n```" : "```";
-		const endBrackets = "```"
+		const endBrackets = "```";
 
 		const newContent =
 			startContent +
@@ -231,7 +241,7 @@ export class AttendanceCodeblock {
 		let idx = fileContent.indexOf("```" + CODE_BLOCK, start + 1);
 		start = idx >= 0 ? idx : fileContent.length - 1;
 		idx = fileContent.indexOf("```", start + 3);
-		const end = idx >= 0 ? idx+3 : fileContent.length - 1;
+		const end = idx >= 0 ? idx + 3 : fileContent.length - 1;
 
 		const code = fileContent.substring(start + CODE_BLOCK.length + 3, end);
 		const attendance = new AttendanceCodeblock(code, file.path, vault);

@@ -10,8 +10,6 @@ export class AttendanceOverviewView extends ItemView {
 		super(leaf);
 
     this.app.workspace.on("obsidian-attendance:cache-update", () => {
-      console.log("cache update");
-			
 			if (this.attendanceOverview) {
         this.attendanceOverview.update([...this.cache.getCodeblocks()])
       }
