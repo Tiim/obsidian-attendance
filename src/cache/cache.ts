@@ -5,6 +5,7 @@ import { CodeBlockCache } from "./codeblock-cache";
 import { BidirectionalMap } from "./bidirectional-map";
 import { FolderCache } from "./folder-cache";
 import { MarkdownMetadataParser } from "../parse/markdown-metadata-parser";
+import type { AttendanceCodeblock } from "src/AttendanceData";
 
 export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
 
@@ -62,8 +63,6 @@ export class SourceCache extends Component {
 			this.links.set(file.path, data.links);
 			this.touch("reload");
 		});
-
-		this.touch("reload");
 	}
 
 	private touch(reason: string) {
@@ -105,5 +104,10 @@ export class SourceCache extends Component {
 				"Query type '" + source.getType() + "' not yet supported"
 			);
 		}
+	}
+
+
+	getCodeblocks(): Set<AttendanceCodeblock> {
+		return this.codeblocks.getAll();
 	}
 }
