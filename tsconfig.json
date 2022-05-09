@@ -28,7 +28,9 @@
       "ES7"
     ]
   },
-  
+  "paths": {
+    "src": ["src/*"]
+  },
   "include": [
     "src/**/*.ts",
     "src/**/*.svelte"

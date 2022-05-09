@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { AttendanceRenderer } from "./ui/AttendanceRenderer";
+import { AttendanceCodeblockRenderer } from "./ui/AttendanceCodeblockRenderer";
 import { SourceCache } from "./cache/cache";
 import { AttendanceSettingsTab } from "./SettingsTab";
 import { AttendanceOverviewView } from "./ui/AttendanceOverviewView";
@@ -59,7 +59,7 @@ export default class AttendancePlugin extends Plugin {
 
 		this.sourceCache = new SourceCache(this.app, this);
 
-		new AttendanceRenderer({
+		new AttendanceCodeblockRenderer({
 			plugin: this,
 			cache: this.sourceCache,
 			states: this.settings.states,

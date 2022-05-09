@@ -12,7 +12,7 @@ import { AttendanceEntry, AttendanceCodeblock } from "../AttendanceData";
 import { EVENT_CACHE_UPDATE, SourceCache } from "../cache/cache";
 import { Link } from "../util/link";
 
-export class AttendanceRenderer {
+export class AttendanceCodeblockRenderer {
 	private readonly app: App;
 	private readonly cache: SourceCache;
 	private readonly states: AttendanceStateSetting[];
