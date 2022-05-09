@@ -2,6 +2,8 @@ import { Plugin } from "obsidian";
 import { AttendanceRenderer } from "./ui/AttendanceRenderer";
 import { SourceCache } from "./cache/cache";
 import { AttendanceSettingsTab } from "./SettingsTab";
+import { AttendanceOverviewView } from "./ui/AttendanceOverviewView";
+import { VIEW_TYPE_ATTENDANCE } from "./globals";
 
 declare module "obsidian" {
 	interface Workspace {
@@ -36,10 +38,24 @@ const DEFAULT_SETTINGS: AttendancePluginSettings = {
 export default class AttendancePlugin extends Plugin {
 	settings: AttendancePluginSettings;
 	private sourceCache: SourceCache;
+	private view: AttendanceOverviewView;
 
 	async onload() {
 		await this.loadSettings();
+		
+		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
+		this.registerView(VIEW_TYPE_ATTENDANCE, 
+			(leaf) => (this.view = new AttendanceOverviewView(leaf)));
+
+
+		this.addCommand({
+			id: "attendance:show-view",
+			name: "Show Attendance View",
+			callback: () => {
+				this.showView();
+			}
+		})
 
 		this.sourceCache = new SourceCache(this.app, this);
 
@@ -62,5 +78,17 @@ export default class AttendancePlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+
+	showView() {
+		if (this.app.workspace.getLeavesOfType(VIEW_TYPE_ATTENDANCE).length) {
+			return;
+		}
+		this.app.workspace.getRightLeaf(false).setViewState({
+			type: VIEW_TYPE_ATTENDANCE,
+			active: true,
+
+		})
 	}
 }
