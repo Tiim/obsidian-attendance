@@ -2,7 +2,7 @@ import { Plugin } from "obsidian";
 import { AttendanceCodeblockRenderer } from "./ui/AttendanceCodeblockRenderer";
 import { SourceCache } from "./cache/cache";
 import { AttendanceSettingsTab } from "./SettingsTab";
-import { AttendanceOverviewView } from "./ui/AttendanceOverviewView";
+import { AttendanceOverviewView } from "./ui/view/AttendanceOverviewView";
 import { VIEW_TYPE_ATTENDANCE } from "./globals";
 
 declare module "obsidian" {
@@ -42,11 +42,12 @@ export default class AttendancePlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		this.sourceCache = new SourceCache(this.app, this);
 		
 		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
 		this.registerView(VIEW_TYPE_ATTENDANCE, 
-			(leaf) => (this.view = new AttendanceOverviewView(leaf)));
+			(leaf) => (this.view = new AttendanceOverviewView(leaf, this.sourceCache)));
 
 
 		this.addCommand({
@@ -57,7 +58,6 @@ export default class AttendancePlugin extends Plugin {
 			}
 		})
 
-		this.sourceCache = new SourceCache(this.app, this);
 
 		new AttendanceCodeblockRenderer({
 			plugin: this,
