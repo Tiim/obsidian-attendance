@@ -16,19 +16,17 @@ export class MarkdownMetadataParser {
 	public async getMetadata(file: TFile): Promise<MarkdownFileMetadata> {
 		const fc = this.cache.getFileCache(file);
 		const tags = new Set<string>();
-		const links = new Set<string>();
 		// files that are not in the cache yet, will be handled by the "resolve" event
 		if (fc) {
 			const allTags = getAllTags(fc) || [];
-			
-			allTags.flatMap(expandTag)
-				.forEach((tag) => tags.add(tag));
 
-      const allLinks = [...fc.links || [], ...fc.embeds||[]];
-      allLinks.forEach((link) => links.add(this.cache.getFirstLinkpathDest(link.link,file.path)?.path));
+			allTags.flatMap(expandTag).forEach((tag) => tags.add(tag));
 		}
 
-		// use promises, this is not an async function
+		const links = new Set<string>(
+			Object.keys(this.cache.resolvedLinks[file.path])
+		);
+
 		const codeblocks = await AttendanceCodeblock.parseAllCodeblocksInFile(
 			file,
 			this.vault
