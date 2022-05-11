@@ -1,6 +1,5 @@
 import type {MarkdownPostProcessorContext} from "obsidian"
 import {
-	App,
 	Component,
 	MarkdownRenderChild,
 	MarkdownRenderer,
@@ -10,10 +9,9 @@ import type AttendancePlugin from "../main";
 import type { AttendanceStateSetting } from "../main";
 import { AttendanceEntry, AttendanceCodeblock } from "../AttendanceData";
 import { EVENT_CACHE_UPDATE, SourceCache } from "../cache/cache";
-import { Link } from "../util/link";
 
 export class AttendanceCodeblockRenderer {
-	private readonly app: App;
+	private readonly plugin: AttendancePlugin;
 	private readonly cache: SourceCache;
 	private readonly states: AttendanceStateSetting[];
 
@@ -26,7 +24,7 @@ export class AttendanceCodeblockRenderer {
 		cache: SourceCache;
 		states: AttendanceStateSetting[];
 	}) {
-		this.app = plugin.app;
+		this.plugin = plugin;
 		this.cache = cache;
 		this.states = states;
 
@@ -41,13 +39,17 @@ export class AttendanceCodeblockRenderer {
 		element: HTMLElement,
 		context: MarkdownPostProcessorContext
 	) {
-		const attendance = new AttendanceCodeblock(source, context.sourcePath, this.app.vault);
+		const attendance = new AttendanceCodeblock(
+			source,
+			context.sourcePath,
+			this.plugin.app.vault
+		);
 
 		const renderChild = new AttendanceRenderChild({
 			context,
 			container: element,
 			attendance,
-			app: this.app,
+			plugin: this.plugin,
 			states: this.states,
 			cache: this.cache,
 		});
@@ -65,7 +67,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		context: MarkdownPostProcessorContext;
 		container: HTMLElement;
 		attendance: AttendanceCodeblock;
-		app: App;
+		plugin: AttendancePlugin;
 		states: AttendanceStateSetting[];
 		cache: SourceCache;
 	}) {
@@ -76,7 +78,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 
 		this.render(args.attendance);
 		this.registerEvent(
-			args.app.workspace.on(EVENT_CACHE_UPDATE, () =>
+			args.plugin.events.on(EVENT_CACHE_UPDATE, () =>
 				this.render(args.attendance)
 			)
 		);

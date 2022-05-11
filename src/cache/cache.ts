@@ -20,7 +20,7 @@ export class SourceCache extends Component {
 
 	constructor(app: App, plugin: AttendancePlugin) {
 		super();
-		this.trigger = app.workspace.trigger.bind(app.workspace);
+		this.trigger = plugin.events.trigger.bind(plugin.events);
 		this.cache = app.metadataCache;
 		this.folders = new FolderCache(app.vault);
 		this.markdownParser = new MarkdownMetadataParser(this.cache, app.vault);

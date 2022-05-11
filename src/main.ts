@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Plugin, Events } from "obsidian";
 import { AttendanceCodeblockRenderer } from "./ui/AttendanceCodeblockRenderer";
 import { SourceCache } from "./cache/cache";
 import { AttendanceSettingsTab } from "./SettingsTab";
@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: AttendancePluginSettings = {
 
 export default class AttendancePlugin extends Plugin {
 	settings: AttendancePluginSettings;
+	events: Events = new Events();
 	private sourceCache: SourceCache;
 
 
