@@ -35,7 +35,13 @@ export class SourceCache extends Component {
 			this.cache.on("resolve", (file) => this.reloadFile(file))
 		);
 
-		app.vault.getMarkdownFiles().forEach((file) => this.reloadFile(file));
+		// Load markdown files after a timeout
+		// This is to avoid loading all markdown files on startup
+		app.vault
+			.getMarkdownFiles()
+			.forEach((file, index) =>
+				setTimeout(() => this.reloadFile(file), 1000 + index * 50)
+			);
 	}
 
 	private rename(file: TAbstractFile, oldPath: string) {
@@ -56,13 +62,12 @@ export class SourceCache extends Component {
 		this.touch("delete");
 	}
 
-	private reloadFile(file: TFile) {
-		this.markdownParser.getMetadata(file).then((data) => {
-			this.tags.set(file.path, data.tags);
-			this.codeblocks.set(file.path, data.codeblocks);
-			this.links.set(file.path, data.links);
-			this.touch("reload");
-		});
+	private async reloadFile(file: TFile) {
+		const data = await this.markdownParser.getMetadata(file)
+		this.tags.set(file.path, data.tags);
+		this.codeblocks.set(file.path, data.codeblocks);
+		this.links.set(file.path, data.links);
+		this.touch("reload");
 	}
 
 	private touch(reason: string) {
@@ -105,7 +110,6 @@ export class SourceCache extends Component {
 			);
 		}
 	}
-
 
 	getCodeblocks(): Set<AttendanceCodeblock> {
 		return this.codeblocks.getAll();
