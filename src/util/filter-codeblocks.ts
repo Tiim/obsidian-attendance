@@ -1,3 +1,4 @@
+import { moment } from "obsidian";
 import type {Attendance, AttendanceCodeblock} from "./../AttendanceData";
 export type Search = {
 	from?: moment.Moment;

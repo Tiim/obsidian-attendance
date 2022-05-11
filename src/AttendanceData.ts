@@ -1,9 +1,8 @@
-import { TFile, Vault } from "obsidian";
+import { TFile, Vault, moment } from "obsidian";
 import { CODE_BLOCK } from "./globals";
 import { QueryParser } from "./parse/query";
 import { Query } from "./Query";
 import type { SourceCache } from "./cache/cache";
-import moment from "moment";
 
 /**
  * Data structure holding attendance data for a single codeblock.
