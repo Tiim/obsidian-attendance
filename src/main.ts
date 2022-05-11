@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS: AttendancePluginSettings = {
 export default class AttendancePlugin extends Plugin {
 	settings: AttendancePluginSettings;
 	private sourceCache: SourceCache;
-	private view: AttendanceOverviewView;
+
 
 	async onload() {
 		await this.loadSettings();
@@ -48,7 +48,7 @@ export default class AttendancePlugin extends Plugin {
 		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
 		this.registerView(VIEW_TYPE_ATTENDANCE, 
-			(leaf) => (this.view = new AttendanceOverviewView(leaf, this.sourceCache)));
+			(leaf) => new AttendanceOverviewView(leaf, this.sourceCache));
 
 
 		this.addCommand({
