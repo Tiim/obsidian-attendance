@@ -1,4 +1,4 @@
-import type {MarkdownPostProcessorContext} from "obsidian"
+import {TFile, type MarkdownPostProcessorContext} from "obsidian"
 import {
 	Component,
 	MarkdownRenderChild,
@@ -62,6 +62,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 	private readonly context: MarkdownPostProcessorContext;
 	private readonly states: AttendanceStateSetting[];
 	private readonly cache: SourceCache;
+	private readonly markdownLink: (file: string) => string;
 
 	constructor(args: {
 		context: MarkdownPostProcessorContext;
@@ -76,6 +77,14 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		this.states = args.states;
 		this.cache = args.cache;
 
+		this.markdownLink = (link: string) => {
+			const aFile = args.plugin.app.vault.getAbstractFileByPath(link);
+			if (aFile instanceof TFile) {
+				return args.plugin.app.fileManager.generateMarkdownLink(aFile, this.context.sourcePath);
+			}
+			return `[[${link}]]`;
+		}
+		
 		this.render(args.attendance);
 		this.registerEvent(
 			args.plugin.events.on(EVENT_CACHE_UPDATE, () =>
@@ -122,7 +131,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 			cls: itemState === "" ? "inactive" : itemState,
 		});
 		renderCompactMarkdown(
-			new Link(attendanceEntry.link).markdown(),
+			this.markdownLink(attendanceEntry.link),
 			li,
 			this.context.sourcePath,
 			this
