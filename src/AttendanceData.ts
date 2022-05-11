@@ -36,8 +36,9 @@ export class Attendance {
 	 */
 	public toString(): string {
 		return (
-			`date: ${this.date.format("YYYY-MM-DD")}\ntitle: ${this.title}\nquery: ${this.query}\n` +
-			this.attendances.toString()
+			`date: ${this.date.format("YYYY-MM-DD")}\ntitle: ${
+				this.title
+			}\nquery: ${this.query}\n` + this.attendances.toString()
 		);
 	}
 
@@ -180,6 +181,7 @@ export class AttendanceCodeblock {
 		while (idxStart < fileContent.length - 1) {
 			const cb: ParsedCodeblock =
 				await AttendanceCodeblock.parseNextCodeblockInFile(
+					fileContent,
 					tfile,
 					idxEnd,
 					this.vault
@@ -219,10 +221,17 @@ export class AttendanceCodeblock {
 		vault: Vault
 	): Promise<Set<AttendanceCodeblock>> {
 		const set = new Set<AttendanceCodeblock>();
-		let lastCB = await this.parseNextCodeblockInFile(file, 0, vault);
+		const fileContent = await vault.read(file);
+		let lastCB = await this.parseNextCodeblockInFile(
+			fileContent,
+			file,
+			0,
+			vault
+		);
 		while (lastCB.range.start < lastCB.fileSize - 1) {
 			set.add(lastCB.attendance);
 			lastCB = await this.parseNextCodeblockInFile(
+				fileContent,
 				file,
 				lastCB.range.end,
 				vault
@@ -231,13 +240,12 @@ export class AttendanceCodeblock {
 		return set;
 	}
 
-	private static async parseNextCodeblockInFile(
+	private static parseNextCodeblockInFile(
+		fileContent: string,
 		file: TFile,
 		start: number,
 		vault: Vault
-	): Promise<ParsedCodeblock> {
-		const fileContent = await vault.read(file);
-
+	): ParsedCodeblock {
 		let idx = fileContent.indexOf("```" + CODE_BLOCK, start + 1);
 		start = idx >= 0 ? idx : fileContent.length - 1;
 		idx = fileContent.indexOf("```", start + 3);
