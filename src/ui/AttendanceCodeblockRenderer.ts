@@ -104,7 +104,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 	}
 
 	private renderError(type: string, errorMessage: string) {
-		this.containerEl.innerHTML = "";
+		this.containerEl.empty();
 		this.containerEl.createEl("pre", {
 			cls: "error",
 			text: `${type} error: ${errorMessage}`,
