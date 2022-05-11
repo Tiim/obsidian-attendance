@@ -36,7 +36,7 @@ export class Attendance {
 	 */
 	public toString(): string {
 		return (
-			`date: ${this.date}\ntitle: ${this.title}\nquery: ${this.query}\n` +
+			`date: ${this.date.format("YYYY-MM-DD")}\ntitle: ${this.title}\nquery: ${this.query}\n` +
 			this.attendances.toString()
 		);
 	}
