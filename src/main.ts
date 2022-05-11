@@ -45,6 +45,7 @@ export default class AttendancePlugin extends Plugin {
 		await this.loadSettings();
 		this.sourceCache = new SourceCache(this.app, this);
 		
+		this.addChild(this.sourceCache);
 		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
 		this.registerView(VIEW_TYPE_ATTENDANCE, 
