@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { Attendance } from "src/AttendanceData";
 	import type { QueryResolver } from "src/resolver/query-resolver";
+  import { createEventDispatcher } from "svelte";
+	
+	
+	let dispatch = createEventDispatcher();
 	
 	export let attendance: Attendance[];
 	export let resolver: QueryResolver;
@@ -14,11 +18,16 @@
 		countsArray2.sort((a, b) => b[1] - a[1]);
 		return countsArray2.filter(([s,_]) => s).map(([state, count]) => `${state||"Default"}: ${count}`).join(", ");
 	}
+
+	function openFile(attendance: Attendance) {
+		dispatch("openFile", attendance);
+	}
+	
 </script>
 
 <div class="list-view">
 	{#each attendance as a}
-		<article>
+		<article on:click={()=>openFile(a)}>
 			<div>
 				<span class="date">{a.date.format("YYYY-MM-DD")}</span>
 				<span class="title">{a.title}</span>

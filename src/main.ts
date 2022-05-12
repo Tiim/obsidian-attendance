@@ -81,10 +81,9 @@ export default class AttendancePlugin extends Plugin {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE_ATTENDANCE).length) {
 			return;
 		}
-		this.app.workspace.getRightLeaf(false).setViewState({
+		this.app.workspace.getRightLeaf(true).setViewState({
 			type: VIEW_TYPE_ATTENDANCE,
 			active: true,
-
 		})
 	}
 }

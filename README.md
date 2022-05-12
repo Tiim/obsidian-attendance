@@ -134,7 +134,7 @@ Run `npm run lint` to see all the errors and `npm run lint -- --fix` to fix all 
 ### Releasing new releases
 
 - Update minimum obsidian version in `manifest.json`.
-- Run `npm run build`
+- Run `npm run build && npm run test`
 - Run `npm version [patch, minor, major]` to update the version.
 - Run `git push && git push --tags`
 - Run `gh release create $(cat manifest.json | jq ".version" -r) --generate-notes` to create the github release

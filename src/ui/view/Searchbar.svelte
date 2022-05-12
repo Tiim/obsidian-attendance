@@ -2,7 +2,7 @@
 	import { onMount } from "svelte";
 	import { App, setIcon } from "obsidian";
   import { createEventDispatcher } from "svelte";
-	import type { Search } from "../../util/filter-codeblocks";
+	import type { Search } from "src/util/filter-codeblocks";
 	import { SelectDatesModalView } from "./SelectDatesModalView";
 	
 	

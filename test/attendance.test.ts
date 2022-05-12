@@ -43,7 +43,8 @@ test("Attendance toString", () => {
 			new AttendanceEntry("test2.md", "present", ""),
 			new AttendanceEntry("test3.md", "present", ""),
 			new AttendanceEntry("test4.md", "present", ""),
-		]
+		],
+		"test.md"
 	);
 	expect(attendance.toString()).toBe(
 		'date: 2022-01-01\ntitle: Test Title\nquery: "test-folder"\n' +

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { AttendanceCodeblock } from "src/AttendanceData";
+	import type { Attendance, AttendanceCodeblock } from "src/AttendanceData";
 	import Footer from "./Footer.svelte";
 	import ListView from "./ListView.svelte";
 	import Searchbar from "./Searchbar.svelte";
 	import { filterCodeblocks, type Search } from "../../util/filter-codeblocks";
 	import type { QueryResolver } from "../../resolver/query-resolver";
 	import { exportAttendance } from "../../util/export";
-	import type { App } from "obsidian";
+	import { TFile, type App } from "obsidian";
 	import type AttendancePlugin from "../../main";
 
 	export let plugin: AttendancePlugin;
@@ -22,6 +22,13 @@
 		const cb = filterCodeblocks(codeblocks, search);
 		await exportAttendance(cb, plugin);
 	}
+
+	function open(a: CustomEvent<Attendance>) {
+		const tFile = app.vault.getAbstractFileByPath(a.detail.path);
+		if (tFile instanceof TFile) {
+			app.workspace.getUnpinnedLeaf().openFile(tFile, {active: true});
+		}
+	}
 </script>
 
 <div class="attendance-overview">
@@ -36,6 +43,7 @@
 	</span>
 	<div class="content">
 		<ListView
+		on:openFile={open}
 			{resolver}
 			attendance={filterCodeblocks(codeblocks, search)}
 		/>

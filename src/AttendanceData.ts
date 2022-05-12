@@ -11,17 +11,20 @@ export class Attendance {
 	public readonly title: string;
 	public readonly query: Query;
 	public readonly attendances: Attendances;
+	public readonly path: string;
 
 	constructor(
 		date: moment.Moment,
 		title: string,
 		query: Query,
-		attendances: AttendanceEntry[]
+		attendances: AttendanceEntry[],
+		path: string
 	) {
 		this.date = date;
 		this.title = title;
 		this.query = query;
 		this.attendances = new Attendances(attendances);
+		this.path = path;
 	}
 	public getAttendances(allPaths: Set<string>): AttendanceEntry[] {
 		return this.attendances.getAttendancesAll(
@@ -111,12 +114,10 @@ class Attendances {
  */
 export class AttendanceCodeblock {
 	public attendance: Attendance;
-	public readonly path: string;
 	public readonly error: Error;
 	private readonly vault: Vault;
 
 	constructor(sourceString: string, path: string, vault: Vault) {
-		this.path = path;
 		this.vault = vault;
 
 		try {
@@ -130,7 +131,7 @@ export class AttendanceCodeblock {
 			if (!date.isValid()) {
 				throw new Error("The date is not valid.");
 			}
-			this.attendance = new Attendance(date, title, query, attendances);
+			this.attendance = new Attendance(date, title, query, attendances, path);
 		} catch (e) {
 			this.error = e;
 		}
@@ -165,9 +166,9 @@ export class AttendanceCodeblock {
 	}
 
 	public async write() {
-		const tFile = this.vault.getAbstractFileByPath(this.path);
+		const tFile = this.vault.getAbstractFileByPath(this.attendance.path);
 		if (!(tFile instanceof TFile)) {
-			throw new Error(`${this.path} is not an existing file.`);
+			throw new Error(`${this.attendance.path} is not an existing file.`);
 		}
 
 		const fileContent = await this.vault.read(tFile);
