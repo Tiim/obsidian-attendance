@@ -29,10 +29,12 @@
     ]
   },
   "paths": {
-    "src": ["src/*"]
+    "src": ["src/*"],
+    "assets": ["assets/*"]
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.svelte"
+    "src/**/*.svelte",
+    "assets/**/*.svg",
   ]
 }

@@ -71,6 +71,9 @@ esbuild
 			}),
 		],
 		write: false,
+		loader: {
+			".svg": "text"
+		}
 	})
 	.catch(() => process.exit(1))
 	.then(write);
