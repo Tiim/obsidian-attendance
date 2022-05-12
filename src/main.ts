@@ -1,6 +1,6 @@
 import { Plugin, Events } from "obsidian";
 import { AttendanceCodeblockRenderer } from "./ui/AttendanceCodeblockRenderer";
-import { SourceCache } from "./cache/cache";
+import { QueryResolver } from "./resolver/query-resolver";
 import { AttendanceSettingsTab } from "./SettingsTab";
 import { AttendanceOverviewView } from "./ui/view/AttendanceOverviewView";
 import { VIEW_TYPE_ATTENDANCE } from "./globals";
@@ -39,12 +39,12 @@ const DEFAULT_SETTINGS: AttendancePluginSettings = {
 export default class AttendancePlugin extends Plugin {
 	settings: AttendancePluginSettings;
 	events: Events = new Events();
-	private sourceCache: SourceCache;
+	private sourceCache: QueryResolver;
 
 
 	async onload() {
 		await this.loadSettings();
-		this.sourceCache = new SourceCache(this.app, this);
+		this.sourceCache = new QueryResolver(this.app, this);
 		
 		this.addChild(this.sourceCache);
 		

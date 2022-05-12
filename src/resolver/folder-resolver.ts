@@ -1,7 +1,7 @@
 import { TFolder, Vault } from "obsidian";
 
 /** Indexes files by their full prefix - essentially a simple prefix tree. */
-export class FolderCache {
+export class FolderResolver {
 	private readonly vault: Vault;
 
 	constructor(vault: Vault) {

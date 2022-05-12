@@ -1,7 +1,7 @@
 import { PluginSettingTab, App, Setting } from "obsidian";
 import type AttendancePlugin from "./main";
 import type { AttendanceStateSetting } from './main';
-import { EVENT_CACHE_UPDATE } from "./cache/cache";
+import { EVENT_CACHE_UPDATE } from "./resolver/query-resolver";
 
 export class AttendanceSettingsTab extends PluginSettingTab {
 	plugin: AttendancePlugin;

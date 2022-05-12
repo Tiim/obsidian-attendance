@@ -2,17 +2,18 @@ import { App, Component, getAllTags, MetadataCache, TAbstractFile, TFile } from 
 import type AttendancePlugin from "../main";
 import { BinaryQuery, FolderQuery, LinkQuery, Query, TagQuery } from "../Query";
 import { CodeBlockCache } from "./codeblock-cache";
-import { FolderCache } from "./folder-cache";
+import { FolderResolver } from "./folder-resolver";
 import { MarkdownMetadataParser } from "../parse/markdown-metadata-parser";
 import type { AttendanceCodeblock } from "src/AttendanceData";
 import { expandTag } from "src/util/expand-tag";
 
 export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
 
-export class SourceCache extends Component {
-	private readonly folders;
+export class QueryResolver extends Component {
+	private readonly folders: FolderResolver;
 	private readonly codeblocks = new CodeBlockCache();
 	private readonly cache: MetadataCache;
+	
 	private readonly trigger: (name: string, reason: string) => void;
 	private readonly markdownParser: MarkdownMetadataParser;
 
@@ -20,7 +21,7 @@ export class SourceCache extends Component {
 		super();
 		this.trigger = plugin.events.trigger.bind(plugin.events);
 		this.cache = app.metadataCache;
-		this.folders = new FolderCache(app.vault);
+		this.folders = new FolderResolver(app.vault);
 		this.markdownParser = new MarkdownMetadataParser(this.cache, app.vault);
 
 		plugin.addChild(this);
@@ -35,7 +36,7 @@ export class SourceCache extends Component {
 
 		// Load markdown files after a timeout
 		// This is to avoid loading all markdown files on startup
-		app.vault
+		app.vault 
 			.getMarkdownFiles()
 			.forEach((file, index) =>
 				setTimeout(() => this.reloadFile(file), 1000 + index * 50)
@@ -67,7 +68,7 @@ export class SourceCache extends Component {
 		this.trigger(EVENT_CACHE_UPDATE, reason);
 	}
 
-	public getMatchingFiles(source: Query): Set<string> {
+	public resolveQuery(source: Query): Set<string> {
 		if (source instanceof TagQuery) {
 			return this.filesWithTag(source.tag);
 		} else if (source instanceof FolderQuery) {
@@ -81,8 +82,8 @@ export class SourceCache extends Component {
 			const file = this.cache.getFirstLinkpathDest(source.link, "")?.path;
 			return this.getFilesWithLink(file);
 		} else if (source instanceof BinaryQuery) {
-			const left = this.getMatchingFiles(source.left);
-			const right = this.getMatchingFiles(source.right);
+			const left = this.resolveQuery(source.left);
+			const right = this.resolveQuery(source.right);
 
 			if (source.operation === "and") {
 				//intersection of sets

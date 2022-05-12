@@ -2,7 +2,7 @@ import { TFile, Vault, moment } from "obsidian";
 import { CODE_BLOCK } from "./globals";
 import { QueryParser } from "./parse/query";
 import { Query } from "./Query";
-import type { SourceCache } from "./cache/cache";
+import type { QueryResolver } from "./resolver/query-resolver";
 
 /**
  * Data structure holding attendance data for a single codeblock.
@@ -24,9 +24,9 @@ export class Attendance {
 		this.query = query;
 		this.attendances = new Attendances(attendances);
 	}
-	public getAttendances(cache: SourceCache): AttendanceEntry[] {
+	public getAttendances(cache: QueryResolver): AttendanceEntry[] {
 		return this.attendances.getAttendancesAll(
-			Array.from(cache.getMatchingFiles(this.query))
+			Array.from(cache.resolveQuery(this.query))
 		);
 	}
 

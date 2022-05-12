@@ -1,12 +1,12 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
-import type { SourceCache } from "src/cache/cache";
+import type { QueryResolver } from "src/resolver/query-resolver";
 import {VIEW_TYPE_ATTENDANCE} from "src/globals";
 import AttendanceOverview from "./AttendanceOverview.svelte";
 
 export class AttendanceOverviewView extends ItemView {
 	private attendanceOverview: AttendanceOverview;
 
-	constructor(leaf: WorkspaceLeaf, private readonly cache: SourceCache) {
+	constructor(leaf: WorkspaceLeaf, private readonly cache: QueryResolver) {
 		super(leaf);
 
     this.app.workspace.on("obsidian-attendance:cache-update", () => {

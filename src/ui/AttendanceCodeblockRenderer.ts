@@ -8,11 +8,11 @@ import {CODE_BLOCK} from "../globals";
 import type AttendancePlugin from "../main";
 import type { AttendanceStateSetting } from "../main";
 import { AttendanceEntry, AttendanceCodeblock } from "../AttendanceData";
-import { EVENT_CACHE_UPDATE, SourceCache } from "../cache/cache";
+import { EVENT_CACHE_UPDATE, QueryResolver } from "../resolver/query-resolver";
 
 export class AttendanceCodeblockRenderer {
 	private readonly plugin: AttendancePlugin;
-	private readonly cache: SourceCache;
+	private readonly cache: QueryResolver;
 	private readonly states: AttendanceStateSetting[];
 
 	constructor({
@@ -21,7 +21,7 @@ export class AttendanceCodeblockRenderer {
 		states,
 	}: {
 		plugin: AttendancePlugin;
-		cache: SourceCache;
+		cache: QueryResolver;
 		states: AttendanceStateSetting[];
 	}) {
 		this.plugin = plugin;
@@ -61,7 +61,7 @@ export class AttendanceCodeblockRenderer {
 class AttendanceRenderChild extends MarkdownRenderChild {
 	private readonly context: MarkdownPostProcessorContext;
 	private readonly states: AttendanceStateSetting[];
-	private readonly cache: SourceCache;
+	private readonly cache: QueryResolver;
 	private readonly markdownLink: (file: string) => string;
 
 	constructor(args: {
@@ -70,7 +70,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		attendance: AttendanceCodeblock;
 		plugin: AttendancePlugin;
 		states: AttendanceStateSetting[];
-		cache: SourceCache;
+		cache: QueryResolver;
 	}) {
 		super(args.container);
 		this.context = args.context;
