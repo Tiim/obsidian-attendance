@@ -1,4 +1,4 @@
-import { App, Component, MetadataCache, TAbstractFile, TFile } from "obsidian";
+import { App, Component, getAllTags, MetadataCache, TAbstractFile, TFile } from "obsidian";
 import type AttendancePlugin from "../main";
 import { BinaryQuery, FolderQuery, LinkQuery, Query, TagQuery } from "../Query";
 import { CodeBlockCache } from "./codeblock-cache";
@@ -6,11 +6,12 @@ import { BidirectionalMap } from "./bidirectional-map";
 import { FolderCache } from "./folder-cache";
 import { MarkdownMetadataParser } from "../parse/markdown-metadata-parser";
 import type { AttendanceCodeblock } from "src/AttendanceData";
+import { expandTag } from "src/util/expand-tag";
 
 export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
 
 export class SourceCache extends Component {
-	private readonly tags = new BidirectionalMap();
+	private readonly app: App;
 	private readonly links = new BidirectionalMap();
 	private readonly folders;
 	private readonly codeblocks = new CodeBlockCache();
@@ -20,6 +21,7 @@ export class SourceCache extends Component {
 
 	constructor(app: App, plugin: AttendancePlugin) {
 		super();
+		this.app = app;
 		this.trigger = plugin.events.trigger.bind(plugin.events);
 		this.cache = app.metadataCache;
 		this.folders = new FolderCache(app.vault);
@@ -46,7 +48,6 @@ export class SourceCache extends Component {
 
 	private rename(file: TAbstractFile, oldPath: string) {
 		if (file instanceof TFile) {
-			this.tags.rename(oldPath, file.path);
 			this.codeblocks.rename(oldPath, file.path);
 			this.links.rename(oldPath, file.path);
 		}
@@ -55,7 +56,6 @@ export class SourceCache extends Component {
 
 	private delete(file: TAbstractFile) {
 		if (file instanceof TFile) {
-			this.tags.delete(file.path);
 			this.codeblocks.delete(file.path);
 			this.links.delete(file.path);
 		}
@@ -64,7 +64,6 @@ export class SourceCache extends Component {
 
 	private async reloadFile(file: TFile) {
 		const data = await this.markdownParser.getMetadata(file)
-		this.tags.set(file.path, data.tags);
 		this.codeblocks.set(file.path, data.codeblocks);
 		this.links.set(file.path, data.links);
 		this.touch("reload");
@@ -77,7 +76,7 @@ export class SourceCache extends Component {
 
 	public getMatchingFiles(source: Query): Set<string> {
 		if (source instanceof TagQuery) {
-			return this.tags.getInverse(source.tag);
+			return this.filesWithTag(source.tag);
 		} else if (source instanceof FolderQuery) {
 			if (this.folders.nodeExists(source.folder)) {
 				return this.folders.get(source.folder);
@@ -109,6 +108,21 @@ export class SourceCache extends Component {
 				"Query type '" + source.getType() + "' not yet supported"
 			);
 		}
+	}
+
+	private filesWithTag(tag: string): Set<string> {
+		const files = new Set<string>();
+		app.vault.getMarkdownFiles().forEach((file) => {
+				const fc = this.cache.getFileCache(file);
+				if (fc) {
+					const tags = getAllTags(fc).flatMap(expandTag);
+					if (tags.includes(tag)) {
+						files.add(file.path);
+					}
+				}
+		});
+		
+		return files;
 	}
 
 	getCodeblocks(): Set<AttendanceCodeblock> {
