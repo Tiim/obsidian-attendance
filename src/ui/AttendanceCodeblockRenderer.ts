@@ -1,4 +1,4 @@
-import {TFile, type MarkdownPostProcessorContext} from "obsidian"
+import {Notice, TFile, type MarkdownPostProcessorContext} from "obsidian"
 import {
 	Component,
 	MarkdownRenderChild,
@@ -80,11 +80,14 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		this.markdownLink = (link: string) => {
 			const aFile = args.plugin.app.vault.getAbstractFileByPath(link);
 			if (aFile instanceof TFile) {
-				return args.plugin.app.fileManager.generateMarkdownLink(aFile, this.context.sourcePath);
+				return args.plugin.app.fileManager.generateMarkdownLink(
+					aFile,
+					this.context.sourcePath
+				);
 			}
 			return `[[${link}]]`;
-		}
-		
+		};
+
 		this.render(args.attendance);
 		this.registerEvent(
 			args.plugin.events.on(EVENT_CACHE_UPDATE, () =>
@@ -106,7 +109,9 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		try {
 			attendanceCodeblock.attendance
 				.getAttendances(this.cache)
-				.forEach((at) => this.renderListItem(at, ul, attendanceCodeblock));
+				.forEach((at) =>
+					this.renderListItem(at, ul, attendanceCodeblock)
+				);
 		} catch (e) {
 			this.renderError("Execution", e.message);
 		}
@@ -151,7 +156,13 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 					style: `--bg-color: ${state.color}`,
 				},
 			});
-			btn.onclick = () => source.setState(attendanceEntry.link, state.name, "");
+			btn.onclick = async () => {
+				try {
+					await source.setState(attendanceEntry.link, state.name, "");
+				} catch (e) {
+					new Notice("Error: "+ e.message);
+				}
+			};
 		});
 	}
 }

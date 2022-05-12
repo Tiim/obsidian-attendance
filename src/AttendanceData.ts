@@ -166,25 +166,25 @@ export class AttendanceCodeblock {
 	}
 
 	public async write() {
-		const tfile = this.vault.getAbstractFileByPath(this.path);
-		if (!(tfile instanceof TFile)) {
+		const tFile = this.vault.getAbstractFileByPath(this.path);
+		if (!(tFile instanceof TFile)) {
 			throw new Error(`${this.path} is not an existing file.`);
 		}
 
-		const fileContent = await this.vault.read(tfile);
+		const fileContent = await this.vault.read(tFile);
 
-		let idxStart = 0,
-			idxEnd = 0;
+		let idxStart = 0;
+		let idxEnd = 0;
+		let cb: ParsedCodeblock;
 
 		// find codeblock manually
-		while (idxStart < fileContent.length - 1) {
-			const cb: ParsedCodeblock =
-				await AttendanceCodeblock.parseNextCodeblockInFile(
-					fileContent,
-					tfile,
-					idxEnd,
-					this.vault
-				);
+		while (!cb || !cb.eof) {
+			cb = AttendanceCodeblock.parseNextCodeblockInFile(
+				fileContent,
+				tFile,
+				idxEnd,
+				this.vault
+			);
 			idxStart = cb.range.start;
 			idxEnd = cb.range.end;
 
@@ -196,6 +196,10 @@ export class AttendanceCodeblock {
 			) {
 				break;
 			}
+		}
+
+		if (cb.eof) {
+			throw new Error("Could not find codeblock. Is it in a block quote?");
 		}
 
 		const content = this.attendance.toString();
@@ -212,7 +216,7 @@ export class AttendanceCodeblock {
 			content +
 			endBrackets +
 			endContent;
-		await this.vault.modify(tfile, newContent);
+		await this.vault.modify(tFile, newContent);
 	}
 
 	public static async parseAllCodeblocksInFile(
@@ -227,7 +231,7 @@ export class AttendanceCodeblock {
 			0,
 			vault
 		);
-		while (lastCB.range.start < lastCB.fileSize - 1) {
+		while (!lastCB.eof) {
 			set.add(lastCB.attendance);
 			lastCB = await this.parseNextCodeblockInFile(
 				fileContent,
@@ -253,17 +257,17 @@ export class AttendanceCodeblock {
 		const code = fileContent.substring(start + CODE_BLOCK.length + 3, end);
 		const attendance = new AttendanceCodeblock(code, file.path, vault);
 		return {
+			eof: start === fileContent.length - 1,
 			attendance,
 			range: { start, end },
-			fileSize: fileContent.length,
 		};
 	}
 }
 
 type ParsedCodeblock = {
+	eof: boolean;
 	attendance: AttendanceCodeblock;
 	range: { start: number; end: number };
-	fileSize: number;
 };
 
 /**
