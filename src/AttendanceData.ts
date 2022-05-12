@@ -51,7 +51,7 @@ export class Attendance {
 			return true;
 		}
 		return (
-			a.date === b.date &&
+			a.date.isSame(b.date) &&
 			a.title === b.title &&
 			Query.equals(a.query, b.query)
 		);
