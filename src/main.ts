@@ -6,16 +6,6 @@ import { AttendanceOverviewView } from "./ui/view/AttendanceOverviewView";
 import { VIEW_TYPE_ATTENDANCE } from "./globals";
 import "./styles.css";
 
-declare module "obsidian" {
-	interface Workspace {
-		/** Sent to rendered attendance components to refresh */
-		on(
-			name: "obsidian-attendance:cache-update",
-			callback: () => void
-		): EventRef;
-	}
-}
-
 export type AttendanceStateSetting = {
 	name: string;
 	icon: string;
@@ -50,7 +40,7 @@ export default class AttendancePlugin extends Plugin {
 		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
 		this.registerView(VIEW_TYPE_ATTENDANCE, 
-			(leaf) => new AttendanceOverviewView(leaf, this.sourceCache));
+			(leaf) => new AttendanceOverviewView(leaf, this.queryResolver, this.events));
 
 
 		this.addCommand({
