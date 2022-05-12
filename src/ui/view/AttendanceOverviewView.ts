@@ -1,5 +1,5 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
-import { EVENT_CACHE_UPDATE } from "src/resolver/query-resolver";
+import { EVENT_CACHE_UPDATE } from "src/globals";
 import {VIEW_TYPE_ATTENDANCE} from "src/globals";
 import AttendanceOverview from "./AttendanceOverview.svelte";
 import type AttendancePlugin from "src/main";

@@ -6,8 +6,9 @@ import { FolderResolver } from "./folder-resolver";
 import { MarkdownMetadataParser } from "../parse/markdown-metadata-parser";
 import type { AttendanceCodeblock } from "src/AttendanceData";
 import { expandTag } from "src/util/expand-tag";
+import { EVENT_CACHE_UPDATE } from "src/globals";
 
-export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
+
 
 export class QueryResolver extends Component {
 	private readonly folders: FolderResolver;

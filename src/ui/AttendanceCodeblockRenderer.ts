@@ -8,7 +8,8 @@ import {CODE_BLOCK} from "../globals";
 import type AttendancePlugin from "../main";
 import type { AttendanceStateSetting } from "../main";
 import { AttendanceEntry, AttendanceCodeblock } from "../AttendanceData";
-import { EVENT_CACHE_UPDATE, QueryResolver } from "../resolver/query-resolver";
+import type {  QueryResolver } from "../resolver/query-resolver";
+import {EVENT_CACHE_UPDATE} from "../globals";
 
 export class AttendanceCodeblockRenderer {
 	private readonly plugin: AttendancePlugin;
