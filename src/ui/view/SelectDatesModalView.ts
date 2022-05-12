@@ -2,8 +2,8 @@ import { App, Modal, moment } from "obsidian";
 import SelectDatesModal from "./SelectDatesModal.svelte";
 
 type DateRange = {
-	startDate: moment.Moment;
-	endDate: moment.Moment;
+	startDate: moment.Moment | undefined;
+	endDate: moment.Moment | undefined;
 };
 
 export class SelectDatesModalView extends Modal {
@@ -32,28 +32,21 @@ export class SelectDatesModalView extends Modal {
 				endDate: this.endDate,
 			},
 		});
-		this.selectDatesModal.$on("value", (v: CustomEvent) => {
-			this.startDate = v.detail.startDate;
-			this.endDate = v.detail.endDate;
-		});
 
-		this.selectDatesModal.$on("close", () => {
+		this.selectDatesModal.$on("close", (event: CustomEvent<DateRange>) => {
+			this.startDate = event.detail.startDate;
+			this.endDate = event.detail.endDate;
 			this.close();
 		});
 	}
 
 	wait(): Promise<DateRange> {
-    return this.promise;
-  }
+		return this.promise;
+	}
 
 	onClose() {
 		this.selectDatesModal.$destroy();
 		this.selectDatesModal = null;
-
-    if (this.startDate && this.endDate) {
-      this.resolve({startDate: this.startDate, endDate: this.endDate});
-    } else {
-      this.reject(new Error("No date range selected"));
-    }
+		this.resolve({ startDate: this.startDate, endDate: this.endDate });
 	}
 }

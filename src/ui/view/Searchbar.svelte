@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { App, setIcon } from "obsidian";
-  import { createEventDispatcher } from "svelte";
+	import { createEventDispatcher } from "svelte";
 	import type { Search } from "src/util/filter-codeblocks";
 	import { SelectDatesModalView } from "./SelectDatesModalView";
-	
-	
+
 	export let app: App;
 	export let search: Search;
 	let btnCalendar: HTMLElement;
@@ -16,7 +15,7 @@
 	});
 
 	async function openDateModal() {
-		const sdmv = new SelectDatesModalView(app, search.from, search.to)
+		const sdmv = new SelectDatesModalView(app, search.from, search.to);
 		sdmv.open();
 		const dateRange = await sdmv.wait();
 		search.from = dateRange.startDate;
@@ -26,7 +25,6 @@
 	function onExport() {
 		dispatch("export");
 	}
-
 </script>
 
 <div class="searchbar">
@@ -35,7 +33,7 @@
 		<button
 			bind:this={btnCalendar}
 			on:click={openDateModal}
-			title="Start Date"
+			title="Date Range"
 		/>
 	</span>
 	<button class="export-btn" on:click={onExport}>Export</button>
