@@ -1,17 +1,18 @@
-import { Events, ItemView, WorkspaceLeaf } from "obsidian";
-import { EVENT_CACHE_UPDATE, type QueryResolver } from "src/resolver/query-resolver";
+import { ItemView, WorkspaceLeaf } from "obsidian";
+import { EVENT_CACHE_UPDATE } from "src/resolver/query-resolver";
 import {VIEW_TYPE_ATTENDANCE} from "src/globals";
 import AttendanceOverview from "./AttendanceOverview.svelte";
+import type AttendancePlugin from "src/main";
 
 export class AttendanceOverviewView extends ItemView {
 	private attendanceOverview: AttendanceOverview;
 
-	constructor(leaf: WorkspaceLeaf, private readonly resolver: QueryResolver, eventBus: Events) {
+	constructor(leaf: WorkspaceLeaf, private readonly plugin: AttendancePlugin) {
 		super(leaf);
 
-    eventBus.on(EVENT_CACHE_UPDATE, () => {
+    plugin.events.on(EVENT_CACHE_UPDATE, () => {
 			if (this.attendanceOverview) {
-        this.attendanceOverview.update([...this.resolver.getCodeblocks()])
+        this.attendanceOverview.update([...this.plugin.queryResolver.getCodeblocks()])
       }
     })
 	}
@@ -23,15 +24,22 @@ export class AttendanceOverviewView extends ItemView {
 		return "Attendance";
 	}
 
+	override getIcon(): string {
+		return "user-check";
+	}
+
 	protected onOpen(): Promise<void> {
 		this.attendanceOverview = new AttendanceOverview({
 			target: this.contentEl,
 			props: {
-				resolver: this.resolver,
+				plugin: this.plugin,
+				app: this.plugin.app,
 			},
 		});
 
-		this.attendanceOverview.update([...this.resolver.getCodeblocks()]);
+		this.attendanceOverview.update([
+			...this.plugin.queryResolver.getCodeblocks(),
+		]);
 		return Promise.resolve();
 	}
 

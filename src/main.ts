@@ -30,7 +30,7 @@ const DEFAULT_SETTINGS: AttendancePluginSettings = {
 export default class AttendancePlugin extends Plugin {
 	settings: AttendancePluginSettings;
 	events: Events = new Events();
-	private queryResolver: QueryResolver;
+	queryResolver: QueryResolver;
 
 
 	async onload() {
@@ -43,7 +43,7 @@ export default class AttendancePlugin extends Plugin {
 		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
 		this.registerView(VIEW_TYPE_ATTENDANCE, 
-			(leaf) => new AttendanceOverviewView(leaf, this.queryResolver, this.events));
+			(leaf) => new AttendanceOverviewView(leaf, this));
 
 
 		this.addCommand({

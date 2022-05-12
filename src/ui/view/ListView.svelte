@@ -18,7 +18,6 @@
 
 <div class="list-view">
 	{#each attendance as a}
-	<span>TODO: duplicate entries when modifying</span>
 		<article>
 			<div>
 				<span class="date">{a.date.format("YYYY-MM-DD")}</span>
@@ -46,5 +45,11 @@
 		padding: 4px;
 		border-radius: 4px;
 		background-color: var(--background-primary-alt);
+	}
+	.date {
+		color: var(--text-muted);
+	}
+	.summary {
+		color: var(--text-faint);
 	}
 </style>
