@@ -1,7 +1,7 @@
 import { Plugin, Events } from "obsidian";
 import { AttendanceCodeblockRenderer } from "./ui/AttendanceCodeblockRenderer";
 import { QueryResolver } from "./resolver/query-resolver";
-import { AttendanceSettingsTab } from "./SettingsTab";
+import { AttendanceSettingsTab } from "./ui/SettingsTab";
 import { AttendanceOverviewView } from "./ui/view/AttendanceOverviewView";
 import { VIEW_TYPE_ATTENDANCE } from "./globals";
 import "./styles.css";
