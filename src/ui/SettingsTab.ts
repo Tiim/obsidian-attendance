@@ -49,6 +49,9 @@ export class AttendanceSettingsTab extends PluginSettingTab {
 		span.createEl("a", {
 			text: "@Tiim",
 			href: "https://twitter.com/Tiim",
+			attr: {
+				style: "color: var(--text-muted);",
+			},
 		});
 
 		div.createEl("a", {
