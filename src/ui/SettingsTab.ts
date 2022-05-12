@@ -17,9 +17,6 @@ export class AttendanceSettingsTab extends PluginSettingTab {
 		container.classList.add("attendance-setting");
 
 		container.createEl("h1", { text: "Attendance Plugin Settings" });
-		container
-			.createEl("i", { text: "Created by " })
-			.createEl("a", { href: "https://tiim.ch", text: "@Tiim" });
 		container.createEl("h2", { text: "Plugin Settings" });
 		container.createEl("h3", { text: "Attendance States" });
 		this.plugin.settings.states.forEach((state, index) => {
@@ -42,7 +39,16 @@ export class AttendanceSettingsTab extends PluginSettingTab {
 	private renderCredits(container: HTMLElement) {
 		const div = container.createDiv({
 			cls: "credits",
-			text: "I hope you like this plugin! If you do, please consider donating using the button below.",
+		});
+		const span = div.createSpan({
+			text: "Created with ❤️ by ",
+			attr: {
+				style: "color: var(--text-muted);",
+			}
+		});
+		span.createEl("a", {
+			text: "@Tiim",
+			href: "https://twitter.com/Tiim",
 		});
 
 		div.createEl("a", {
