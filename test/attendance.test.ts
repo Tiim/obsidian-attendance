@@ -80,6 +80,27 @@ other notes
 	expect(JSON.stringify(modify.mock.calls[0][1])).toBe(JSON.stringify(src));
 });
 
+test("Writing attendance first char in file", async () => {
+	const fileContent = `\`\`\`attendance
+date: 2022-01-01
+title: Links Test
+query: [[Winona Philpott]]
+\`\`\`
+
+`
+	const vault = new Vault();
+	vault.read = jest.fn(() => Promise.resolve(fileContent));
+	const modify = jest.fn((f: TFile, s: string) => Promise.resolve());
+	vault.modify = modify;
+
+	const attendanceCodeblock = new AttendanceCodeblock(fileContent.replace(/```/g, ""), "test/file.md", vault);
+	await attendanceCodeblock.write();
+
+	expect(JSON.stringify(modify.mock.calls[0][1])).toBe(
+		JSON.stringify(fileContent)
+	);
+})
+
 test("Writing attendance with changes to string", async () => {
 	const attendance = '- [[test/file.md]], "done", "test"';
 

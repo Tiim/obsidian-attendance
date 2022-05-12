@@ -249,7 +249,7 @@ export class AttendanceCodeblock {
 		start: number,
 		vault: Vault
 	): ParsedCodeblock {
-		let idx = fileContent.indexOf("```" + CODE_BLOCK, start + 1);
+		let idx = fileContent.indexOf("```" + CODE_BLOCK, start);
 		start = idx >= 0 ? idx : fileContent.length - 1;
 		idx = fileContent.indexOf("```", start + 3);
 		const end = idx >= 0 ? idx + 3 : fileContent.length - 1;
