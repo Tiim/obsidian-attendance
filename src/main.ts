@@ -29,14 +29,14 @@ const DEFAULT_SETTINGS: AttendancePluginSettings = {
 export default class AttendancePlugin extends Plugin {
 	settings: AttendancePluginSettings;
 	events: Events = new Events();
-	private sourceCache: QueryResolver;
+	private queryResolver: QueryResolver;
 
 
 	async onload() {
 		await this.loadSettings();
-		this.sourceCache = new QueryResolver(this.app, this);
+		this.queryResolver = new QueryResolver(this.app, this);
 		
-		this.addChild(this.sourceCache);
+		this.addChild(this.queryResolver);
 		
 		this.addSettingTab(new AttendanceSettingsTab(this.app, this));
 		this.registerView(VIEW_TYPE_ATTENDANCE, 
@@ -54,7 +54,7 @@ export default class AttendancePlugin extends Plugin {
 
 		new AttendanceCodeblockRenderer({
 			plugin: this,
-			cache: this.sourceCache,
+			resolver: this.queryResolver,
 			states: this.settings.states,
 		});
 	}

@@ -12,20 +12,20 @@ import { EVENT_CACHE_UPDATE, QueryResolver } from "../resolver/query-resolver";
 
 export class AttendanceCodeblockRenderer {
 	private readonly plugin: AttendancePlugin;
-	private readonly cache: QueryResolver;
+	private readonly resolver: QueryResolver;
 	private readonly states: AttendanceStateSetting[];
 
 	constructor({
 		plugin,
-		cache,
+		resolver,
 		states,
 	}: {
 		plugin: AttendancePlugin;
-		cache: QueryResolver;
+		resolver: QueryResolver;
 		states: AttendanceStateSetting[];
 	}) {
 		this.plugin = plugin;
-		this.cache = cache;
+		this.resolver = resolver;
 		this.states = states;
 
 		plugin.registerMarkdownCodeBlockProcessor(
@@ -51,7 +51,7 @@ export class AttendanceCodeblockRenderer {
 			attendance,
 			plugin: this.plugin,
 			states: this.states,
-			cache: this.cache,
+			resolver: this.resolver,
 		});
 
 		context.addChild(renderChild);
@@ -61,7 +61,7 @@ export class AttendanceCodeblockRenderer {
 class AttendanceRenderChild extends MarkdownRenderChild {
 	private readonly context: MarkdownPostProcessorContext;
 	private readonly states: AttendanceStateSetting[];
-	private readonly cache: QueryResolver;
+	private readonly resolver: QueryResolver;
 	private readonly markdownLink: (file: string) => string;
 
 	constructor(args: {
@@ -70,12 +70,12 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		attendance: AttendanceCodeblock;
 		plugin: AttendancePlugin;
 		states: AttendanceStateSetting[];
-		cache: QueryResolver;
+		resolver: QueryResolver;
 	}) {
 		super(args.container);
 		this.context = args.context;
 		this.states = args.states;
-		this.cache = args.cache;
+		this.resolver = args.resolver;
 
 		this.markdownLink = (link: string) => {
 			const aFile = args.plugin.app.vault.getAbstractFileByPath(link);
@@ -108,7 +108,7 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		const ul = content.createEl("ul");
 		try {
 			attendanceCodeblock.attendance
-				.getAttendances(this.cache)
+				.getAttendances(this.resolver.resolveQuery(attendanceCodeblock.attendance.query))
 				.forEach((at) =>
 					this.renderListItem(at, ul, attendanceCodeblock)
 				);

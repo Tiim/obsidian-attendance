@@ -6,12 +6,12 @@ import AttendanceOverview from "./AttendanceOverview.svelte";
 export class AttendanceOverviewView extends ItemView {
 	private attendanceOverview: AttendanceOverview;
 
-	constructor(leaf: WorkspaceLeaf, private readonly cache: QueryResolver, eventBus: Events) {
+	constructor(leaf: WorkspaceLeaf, private readonly resolver: QueryResolver, eventBus: Events) {
 		super(leaf);
 
     eventBus.on(EVENT_CACHE_UPDATE, () => {
 			if (this.attendanceOverview) {
-        this.attendanceOverview.update([...this.cache.getCodeblocks()])
+        this.attendanceOverview.update([...this.resolver.getCodeblocks()])
       }
     })
 	}
@@ -27,10 +27,11 @@ export class AttendanceOverviewView extends ItemView {
 		this.attendanceOverview = new AttendanceOverview({
 			target: this.contentEl,
 			props: {
+				resolver: this.resolver,
 			},
 		});
 
-		this.attendanceOverview.update([...this.cache.getCodeblocks()]);
+		this.attendanceOverview.update([...this.resolver.getCodeblocks()]);
 		return Promise.resolve();
 	}
 
