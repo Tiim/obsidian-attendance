@@ -5,6 +5,7 @@ import { AttendanceSettingsTab } from "./ui/SettingsTab";
 import { AttendanceOverviewView } from "./ui/view/AttendanceOverviewView";
 import { VIEW_TYPE_ATTENDANCE } from "./globals";
 import "./styles.css";
+import { registerIcons } from "./ui/icons";
 
 export type AttendanceStateSetting = {
 	name: string;
@@ -35,6 +36,8 @@ export default class AttendancePlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.queryResolver = new QueryResolver(this.app, this);
+
+		registerIcons();
 		
 		this.addChild(this.queryResolver);
 		
