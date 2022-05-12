@@ -22,7 +22,7 @@ export class QueryResolver extends Component {
 		this.trigger = plugin.events.trigger.bind(plugin.events);
 		this.cache = app.metadataCache;
 		this.folders = new FolderResolver(app.vault);
-		this.markdownParser = new MarkdownMetadataParser(this.cache, app.vault);
+		this.markdownParser = new MarkdownMetadataParser(app.vault);
 
 		plugin.addChild(this);
 		this.registerEvent(
