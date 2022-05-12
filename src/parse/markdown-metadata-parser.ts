@@ -24,7 +24,7 @@ export class MarkdownMetadataParser {
 		}
 
 		const links = new Set<string>(
-			Object.keys(this.cache.resolvedLinks[file.path])
+			Object.keys(this.cache.resolvedLinks[file.path]||{})
 		);
 
 		const codeblocks = await AttendanceCodeblock.parseAllCodeblocksInFile(
