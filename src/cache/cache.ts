@@ -2,7 +2,6 @@ import { App, Component, getAllTags, MetadataCache, TAbstractFile, TFile } from 
 import type AttendancePlugin from "../main";
 import { BinaryQuery, FolderQuery, LinkQuery, Query, TagQuery } from "../Query";
 import { CodeBlockCache } from "./codeblock-cache";
-import { BidirectionalMap } from "./bidirectional-map";
 import { FolderCache } from "./folder-cache";
 import { MarkdownMetadataParser } from "../parse/markdown-metadata-parser";
 import type { AttendanceCodeblock } from "src/AttendanceData";
@@ -11,8 +10,6 @@ import { expandTag } from "src/util/expand-tag";
 export const EVENT_CACHE_UPDATE = "obsidian-attendance:cache-update";
 
 export class SourceCache extends Component {
-	private readonly app: App;
-	private readonly links = new BidirectionalMap();
 	private readonly folders;
 	private readonly codeblocks = new CodeBlockCache();
 	private readonly cache: MetadataCache;
@@ -21,7 +18,6 @@ export class SourceCache extends Component {
 
 	constructor(app: App, plugin: AttendancePlugin) {
 		super();
-		this.app = app;
 		this.trigger = plugin.events.trigger.bind(plugin.events);
 		this.cache = app.metadataCache;
 		this.folders = new FolderCache(app.vault);
@@ -49,7 +45,6 @@ export class SourceCache extends Component {
 	private rename(file: TAbstractFile, oldPath: string) {
 		if (file instanceof TFile) {
 			this.codeblocks.rename(oldPath, file.path);
-			this.links.rename(oldPath, file.path);
 		}
 		this.touch("rename");
 	}
@@ -57,7 +52,6 @@ export class SourceCache extends Component {
 	private delete(file: TAbstractFile) {
 		if (file instanceof TFile) {
 			this.codeblocks.delete(file.path);
-			this.links.delete(file.path);
 		}
 		this.touch("delete");
 	}
@@ -65,7 +59,6 @@ export class SourceCache extends Component {
 	private async reloadFile(file: TFile) {
 		const data = await this.markdownParser.getMetadata(file)
 		this.codeblocks.set(file.path, data.codeblocks);
-		this.links.set(file.path, data.links);
 		this.touch("reload");
 	}
 
@@ -86,11 +79,7 @@ export class SourceCache extends Component {
 		} else if (source instanceof LinkQuery) {
 			// TODO populate current file
 			const file = this.cache.getFirstLinkpathDest(source.link, "")?.path;
-
-			const outgoing = this.links.get(file);
-			const incomming = this.links.getInverse(file);
-
-			return new Set([...outgoing, ...incomming]);
+			return this.getFilesWithLink(file);
 		} else if (source instanceof BinaryQuery) {
 			const left = this.getMatchingFiles(source.left);
 			const right = this.getMatchingFiles(source.right);
@@ -108,7 +97,7 @@ export class SourceCache extends Component {
 				"Query type '" + source.getType() + "' not yet supported"
 			);
 		}
-	}
+	} 
 
 	private filesWithTag(tag: string): Set<string> {
 		const files = new Set<string>();
@@ -123,6 +112,13 @@ export class SourceCache extends Component {
 		});
 		
 		return files;
+	}
+
+	private getFilesWithLink(link: string): Set<string> {
+		const allLinks = this.cache.resolvedLinks;
+		const outLinks = Object.keys(allLinks[link] || {});
+		const inLinks = Object.entries(allLinks).filter(([_, map]) => map[link]).map(([k, _]) => k);
+		return new Set([...outLinks, ...inLinks]);
 	}
 
 	getCodeblocks(): Set<AttendanceCodeblock> {
