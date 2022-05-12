@@ -30,6 +30,7 @@
 		"husky": "^8.0.0",
 		"jest": "^28.1.0",
 		"jest-environment-jsdom": "^28.1.0",
+		"moment": "^2.29.3",
 		"obsidian": "latest",
 		"svelte-preprocess": "^4.10.6",
 		"ts-jest": "^28.0.2",

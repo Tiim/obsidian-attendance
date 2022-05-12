@@ -1,3 +1,5 @@
+import moment_2 from "moment";
+
 /** Basic obsidian abstraction for any file or folder in a vault. */
 export abstract class TAbstractFile {
 	/**
@@ -57,3 +59,5 @@ export class Vault {
 		return new TFile();
 	}
 }
+
+export const moment = moment_2;
