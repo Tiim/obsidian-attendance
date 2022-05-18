@@ -1,15 +1,15 @@
-import {Notice, TFile, type MarkdownPostProcessorContext} from "obsidian"
-import {
-	Component,
-	MarkdownRenderChild,
-	MarkdownRenderer,
-} from "obsidian";
-import {CODE_BLOCK} from "../globals";
+import { Notice, TFile, type MarkdownPostProcessorContext } from "obsidian";
+import { MarkdownRenderChild, MarkdownRenderer } from "obsidian";
+import { CODE_BLOCK } from "../globals";
 import type AttendancePlugin from "../main";
 import type { AttendanceStateSetting } from "../main";
-import { AttendanceEntry, AttendanceCodeblock } from "../AttendanceData";
-import type {  QueryResolver } from "../resolver/query-resolver";
-import {EVENT_CACHE_UPDATE} from "../globals";
+import {
+	AttendanceEntry,
+	AttendanceCodeblock,
+	Attendance,
+} from "../AttendanceData";
+import type { QueryResolver } from "../resolver/query-resolver";
+import { EVENT_CACHE_UPDATE } from "../globals";
 
 export class AttendanceCodeblockRenderer {
 	private readonly plugin: AttendancePlugin;
@@ -97,25 +97,45 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		);
 	}
 
-	private render(attendanceCodeblock: AttendanceCodeblock) {
+	private async render(attendanceCodeblock: AttendanceCodeblock) {
 		this.containerEl.empty();
 		const content = this.containerEl.createDiv({
 			cls: "attendance-content",
 		});
+		const header = content.createEl("span", { cls: "header" });
+		const table = content.createEl("table");
 		if (attendanceCodeblock.error) {
 			this.renderError("Parsing", attendanceCodeblock.error.message);
 			return;
 		}
-		const ul = content.createEl("ul");
+		const body = table.createEl("tbody");
+		this.renderHeader(header, attendanceCodeblock.attendance);
 		try {
-			attendanceCodeblock.attendance
-				.getAttendances(this.resolver.resolveQuery(attendanceCodeblock.attendance.query))
-				.forEach((at) =>
-					this.renderListItem(at, ul, attendanceCodeblock)
-				);
+			await Promise.all(
+				attendanceCodeblock.attendance
+					.getAttendances(
+						this.resolver.resolveQuery(
+							attendanceCodeblock.attendance.query
+						)
+					)
+					.map((at) =>
+						this.renderListItem(at, body, attendanceCodeblock)
+					)
+			);
 		} catch (e) {
 			this.renderError("Execution", e.message);
 		}
+	}
+
+	private renderHeader(header: HTMLElement, attendance: Attendance) {
+		header.createSpan({
+			text: attendance.title,
+			cls: "title",
+		});
+		header.createSpan({
+			text: attendance.date.format("dddd, DD. MMM YYYY"),
+			cls: "date",
+		});
 	}
 
 	private renderError(type: string, errorMessage: string) {
@@ -126,34 +146,38 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 		});
 	}
 
-	private renderListItem(
+	private async renderListItem(
 		attendanceEntry: AttendanceEntry,
-		ul: HTMLElement,
+		body: HTMLElement,
 		source: AttendanceCodeblock
 	) {
 		const itemState = attendanceEntry.state;
 
-		const li = ul.createEl("li", {
+		const row = body.createEl("tr", {
 			cls: itemState === "" ? "inactive" : itemState,
 		});
-		renderCompactMarkdown(
+
+		const name = row.createEl("td");
+		await MarkdownRenderer.renderMarkdown(
 			this.markdownLink(attendanceEntry.link),
-			li,
+			name,
 			this.context.sourcePath,
 			this
 		);
-		const c = li.createEl("span", { cls: "btn-list" });
+		const btnList = row.createEl("td", { cls: "btn-list" });
 
 		const getClass = (btn: string, state: string) =>
 			`${btn} ${state === btn ? "active" : ""}`;
 
 		this.states.forEach((state) => {
-			const btn = c.createEl("button", {
+			const btn = btnList.createEl("button", {
 				cls: getClass(state.name, itemState),
 				text: state.icon,
 				attr: {
 					"data-print-name": state.name,
-					"aria-label": state.name,
+					"aria-label": `${linkToLabel(attendanceEntry.link)}: ${
+						state.name
+					}`,
 					style: `--bg-color: ${state.color}`,
 				},
 			});
@@ -161,24 +185,13 @@ class AttendanceRenderChild extends MarkdownRenderChild {
 				try {
 					await source.setState(attendanceEntry.link, state.name, "");
 				} catch (e) {
-					new Notice("Error: "+ e.message);
+					new Notice("Error: " + e.message);
 				}
 			};
 		});
 	}
 }
 
-export async function renderCompactMarkdown(
-	markdown: string,
-	container: HTMLElement,
-	sourcePath: string,
-	component: Component
-) {
-	const subContainer = container.createSpan({cls: "attendance-compact"});
-	await MarkdownRenderer.renderMarkdown(
-		markdown,
-		subContainer,
-		sourcePath,
-		component
-	);
+function linkToLabel(link: string): string {
+	return link.match(/([^/]+)$/)[1].replace(".md", "");
 }
