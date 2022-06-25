@@ -47,7 +47,7 @@ export default class AttendancePlugin extends Plugin {
 
 
     this.addCommand({
-      id: 'attendance:show-view',
+      id: 'show-view',
       name: 'Show Attendance View',
       callback: () => {
         this.showView();
