@@ -23,11 +23,11 @@ export class TagQuery extends Query {
   }
 
   getType(): string {
-    return "tag";
+    return 'tag';
   }
 
   equals(other: Query): boolean {
-    if (other.getType() !== "tag") {
+    if (other.getType() !== 'tag') {
       return false;
     }
     const otherTagQuery = other as TagQuery;
@@ -35,7 +35,7 @@ export class TagQuery extends Query {
   }
 
   toString(): string {
-    return "#" +this.tag;
+    return '#' +this.tag;
   }
 }
 
@@ -48,11 +48,11 @@ export class FolderQuery extends Query {
   }
 
   getType(): string {
-    return "folder";
+    return 'folder';
   }
 
   equals(other: Query): boolean {
-    if (other.getType() !== "folder") {
+    if (other.getType() !== 'folder') {
       return false;
     }
     const otherFolderQuery = other as FolderQuery;
@@ -71,11 +71,11 @@ export class LinkQuery extends Query {
   }
 
   getType(): string {
-    return "link";
+    return 'link';
   }
 
   equals(other: Query): boolean {
-    if (other.getType() !== "link") {
+    if (other.getType() !== 'link') {
       return false;
     }
     const otherLinkQuery = other as LinkQuery;
@@ -89,11 +89,11 @@ export class LinkQuery extends Query {
 
 
 export class BinaryQuery extends Query {
-  public readonly operation: "and" | "or";
+  public readonly operation: 'and' | 'or';
   public readonly left: Query;
   public readonly right: Query;
 
-  constructor(operation: "and" | "or", left: Query, right: Query) {
+  constructor(operation: 'and' | 'or', left: Query, right: Query) {
     super();
     this.operation = operation;
     this.left = left;
@@ -101,11 +101,11 @@ export class BinaryQuery extends Query {
   }
 
   getType(): string {
-    return "binary";
+    return 'binary';
   }
 
   equals(other: Query): boolean {
-    if (other.getType() !== "binary") {
+    if (other.getType() !== 'binary') {
       return false;
     }
     const otherBinaryQuery = other as BinaryQuery;

@@ -18,6 +18,20 @@
       "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
       "@typescript-eslint/ban-ts-comment": "off",
       "no-prototype-builtins": "off",
-      "@typescript-eslint/no-empty-function": "off"
+      "@typescript-eslint/no-empty-function": "off",
+      "indent": ["warn", 2],
+      "linebreak-style": [
+        "warn",
+        "unix"
+      ],
+      "quotes": [
+        "warn",
+        "single"
+      ],
+      "semi": [
+        "warn",
+        "always"
+      ],
+      "no-tabs": "warn"
     } 
   }
