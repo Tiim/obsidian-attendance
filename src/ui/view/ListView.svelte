@@ -9,8 +9,15 @@
 	export let attendance: Attendance[];
 	export let resolver: QueryResolver;
 
-	function summary(attendance: Attendance): string {
-		const counts = attendance.getAttendances(resolver.resolveQuery(attendance.query)).reduce((acc, cur) => ({
+  let summaries: string[] = [];
+  $: attendance, resolver, summaries = [];
+
+  export function refreshSummaries() {
+    summaries = attendance.map(a => summary(a));
+  }
+
+	function summary(attendance: Attendance): string {    
+    const counts = attendance.getAttendances(resolver.resolveQuery(attendance.query)).reduce((acc, cur) => ({
 			...acc,
 			[cur.state]: (acc[cur.state] || 0) + 1,
 		}), {} as Record<string, number>)
@@ -26,14 +33,14 @@
 </script>
 
 <div class="list-view">
-	{#each attendance as a}
+	{#each attendance as a, i}
 		<article on:click={()=>openFile(a)}>
 			<div>
 				<span class="date">{a.date.format("YYYY-MM-DD")}</span>
 				<span class="title">{a.title}</span>
 			</div>
       <div class="summary">
-				{summary(a)}
+				{summaries[i] ?? "summary not calculated!"}
       </div>
 		</article>
 	{/each}

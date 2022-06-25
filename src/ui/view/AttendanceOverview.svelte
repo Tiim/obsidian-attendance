@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { onMount } from "svelte";
 	import type { Attendance, AttendanceCodeblock } from "src/AttendanceData";
 	import Footer from "./Footer.svelte";
 	import ListView from "./ListView.svelte";
 	import Searchbar from "./Searchbar.svelte";
 	import { filterCodeblocks, type Search } from "../../util/filter-codeblocks";
-	import type { QueryResolver } from "../../resolver/query-resolver";
 	import { exportAttendance } from "../../util/export";
-	import { TFile, type App } from "obsidian";
+	import { setIcon, TFile, type App } from "obsidian";
 	import type AttendancePlugin from "../../main";
 
 	export let plugin: AttendancePlugin;
@@ -17,6 +17,7 @@
 	export let app: App;
 	let codeblocks: AttendanceCodeblock[] = [];
 	let search: Search = {};
+  let listview: ListView;
 
 	async function onExport() {
 		const cb = filterCodeblocks(codeblocks, search);
@@ -41,8 +42,12 @@
 			to {search.to.format("YYYY-MM-DD")}
 		{/if}
 	</span>
+  <div>
+    <button on:click={() => listview.refreshSummaries()}>Calculate summary</button>
+  </div>
 	<div class="content">
 		<ListView
+    bind:this={listview}
 		on:openFile={open}
 			{resolver}
 			attendance={filterCodeblocks(codeblocks, search)}
