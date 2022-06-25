@@ -286,18 +286,34 @@ export class AttendanceEntry {
 
   public static parse(source: string) {
     const parts = source.split(',').map((part) => part.trim());
+    if (parts.length < 1 || parts.length > 3) {
+      throw new Error('Invalid attendance entry. Format is: [[link]], "state", "note"');
+    }
     if (!parts[0].startsWith('[[') || !parts[0].endsWith(']]')) {
       throw new Error('Invalid link format ' + parts[0]);
     }
-    if (!parts[1].startsWith('"') || !parts[1].endsWith('"')) {
+    if (parts.length > 1 && (!parts[1].startsWith('"') || !parts[1].endsWith('"'))) {
       throw new Error('Invalid state format ' + parts[1]);
     }
-    if (!parts[2].startsWith('"') || !parts[2].endsWith('"')) {
+    if (parts.length > 2 && (!parts[2].startsWith('"') || !parts[2].endsWith('"'))) {
       throw new Error('Invalid note format ' + parts[2]);
     }
     const link = parts[0].substring(2, parts[0].length - 2);
-    const state = parts[1].substring(1, parts[1].length - 1);
-    const note = parts[2].substring(1, parts[2].length - 1);
+    
+    let state;
+    if (parts.length > 1) {
+      state = parts[1].substring(1, parts[1].length - 1);
+    } else {
+      state = '';
+    }
+
+    let note;
+    if (parts.length > 2) {
+      note = parts[2].substring(1, parts[2].length - 1);
+    } else {
+      note = '';
+    }
+    
     return new AttendanceEntry(link, state, note);
   }
 
