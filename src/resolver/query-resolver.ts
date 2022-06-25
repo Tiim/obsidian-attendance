@@ -35,12 +35,14 @@ export class QueryResolver extends Component {
       this.cache.on('resolve', (file) => this.reloadFile(file))
     );
 
-    // Load markdown files after a timeout
-    // This is to avoid loading all markdown files on startup
+    app.workspace.onLayoutReady(() => this.reloadAllFiles());
+  }
+
+  private reloadAllFiles() {
     app.vault 
       .getMarkdownFiles()
       .forEach((file, index) =>
-        setTimeout(() => this.reloadFile(file), 1000 + index * 50)
+        this.reloadFile(file)
       );
   }
 
