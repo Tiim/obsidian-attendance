@@ -207,3 +207,20 @@ test('parse attendance entry', () => {
   expect(attendance.state).toBe('present');
   expect(attendance.note).toBe('');
 });
+
+
+test('parse partial attendance entry', () => {
+  const entry = '[[test.md]], "present"';
+  const attendance = AttendanceEntry.parse(entry);
+  expect(attendance.link).toBe('test.md');
+  expect(attendance.state).toBe('present');
+  expect(attendance.note).toBe('');
+});
+
+test('parse attendance entry with only link', () => {
+  const entry = '[[test.md]]';
+  const attendance = AttendanceEntry.parse(entry);
+  expect(attendance.link).toBe('test.md');
+  expect(attendance.state).toBe('');
+  expect(attendance.note).toBe('');
+});
