@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-attendance",
-	"version": "0.5.2",
+	"version": "0.6.0",
 	"description": "This plugin helps you track attendance.",
 	"main": "main.js",
 	"scripts": {
