@@ -1,5 +1,4 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
-import { EVENT_CACHE_UPDATE } from 'src/globals';
 import {VIEW_TYPE_ATTENDANCE} from 'src/globals';
 import AttendanceOverview from './AttendanceOverview.svelte';
 import type AttendancePlugin from 'src/main';
@@ -9,12 +8,6 @@ export class AttendanceOverviewView extends ItemView {
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: AttendancePlugin) {
     super(leaf);
-
-    plugin.events.on(EVENT_CACHE_UPDATE, () => {
-      if (this.attendanceOverview) {
-        this.attendanceOverview.update([...this.plugin.queryResolver.getCodeblocks()]);
-      }
-    });
   }
 
   getViewType(): string {
@@ -34,12 +27,9 @@ export class AttendanceOverviewView extends ItemView {
       props: {
         plugin: this.plugin,
         app: this.plugin.app,
+        queryResolver: this.plugin.queryResolver,
       },
     });
-
-    this.attendanceOverview.update([
-      ...this.plugin.queryResolver.getCodeblocks(),
-    ]);
     return Promise.resolve();
   }
 

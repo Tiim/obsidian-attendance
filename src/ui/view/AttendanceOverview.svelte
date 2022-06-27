@@ -8,16 +8,21 @@
 	import { exportAttendance } from "../../util/export";
 	import { setIcon, TFile, type App } from "obsidian";
 	import type AttendancePlugin from "../../main";
+import type { QueryResolver } from "src/resolver/query-resolver";
 
 	export let plugin: AttendancePlugin;
 	let resolver = plugin.queryResolver;
-	export function update(cb: AttendanceCodeblock[]) {
-		codeblocks = cb;
-	}
 	export let app: App;
-	let codeblocks: AttendanceCodeblock[] = [];
+  export let queryResolver: QueryResolver;
+	
+  let codeblocks: AttendanceCodeblock[] = [];
 	let search: Search = {};
   let listview: ListView;
+
+  function update() {
+    codeblocks = [...queryResolver.getCodeblocks()];
+    listview.refreshSummaries();
+  }
 
 	async function onExport() {
 		const cb = filterCodeblocks(codeblocks, search);
@@ -43,7 +48,7 @@
 		{/if}
 	</span>
   <div>
-    <button on:click={() => listview.refreshSummaries()}>Calculate summary</button>
+    <button on:click={update}>Refresh</button>
   </div>
 	<div class="content">
 		<ListView

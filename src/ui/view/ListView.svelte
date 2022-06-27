@@ -43,7 +43,9 @@
 				{summaries[i] ?? "summary not calculated!"}
       </div>
 		</article>
-	{/each}
+  {:else}
+    <p class="summary">No attendance blocks loaded, try refreshing.</p>
+  {/each}
 </div>
 <style>
 	.list-view {
