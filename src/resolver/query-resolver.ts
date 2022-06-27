@@ -26,24 +26,19 @@ export class QueryResolver extends Component {
     this.markdownParser = new MarkdownMetadataParser(app.vault);
 
     plugin.addChild(this);
-    this.registerEvent(
-      this.cache.on('changed', (file) => this.reloadFile(file))
-    );
     this.registerEvent(app.vault.on('rename', (f, o) => this.rename(f, o)));
     this.registerEvent(app.vault.on('delete', (file) => this.delete(file)));
-    this.registerEvent(
-      this.cache.on('resolve', (file) => this.reloadFile(file))
-    );
-
-    app.workspace.onLayoutReady(() => this.reloadAllFiles());
   }
 
-  private reloadAllFiles() {
-    app.vault 
+  /**
+   * Only call this when the user refreshes the list.
+   */
+  private async reloadAllFiles() {
+    await Promise.all(app.vault 
       .getMarkdownFiles()
-      .forEach((file, index) =>
+      .map((file) =>
         this.reloadFile(file)
-      );
+      ));
   }
 
   private rename(file: TAbstractFile, oldPath: string) {
@@ -125,7 +120,12 @@ export class QueryResolver extends Component {
     return new Set([...outLinks, ...inLinks]);
   }
 
-  getCodeblocks(): Set<AttendanceCodeblock> {
+  /**
+   * Will reload all files and parse the codeblocks from them.
+   * Warning: This is expensive and should not be done non startup.
+   */
+  async getCodeblocks(): Promise<Set<AttendanceCodeblock>> {
+    await this.reloadAllFiles();
     return this.codeblocks.getAll();
   }
 }

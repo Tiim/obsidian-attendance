@@ -19,8 +19,8 @@ import type { QueryResolver } from "src/resolver/query-resolver";
 	let search: Search = {};
   let listview: ListView;
 
-  function update() {
-    codeblocks = [...queryResolver.getCodeblocks()];
+  async function update() {
+    codeblocks = [...(await queryResolver.getCodeblocks())];
     listview.refreshSummaries();
   }
 
